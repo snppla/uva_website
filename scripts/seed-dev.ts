@@ -13,7 +13,7 @@ import path from "node:path";
 import { and, eq, sql } from "drizzle-orm";
 import { migrate } from "drizzle-orm/postgres-js/migrator";
 import { db, albums, events, images, posts, settings } from "../src/db";
-import { rm } from "node:fs/promises";
+import { chown, readdir, rm, stat } from "node:fs/promises";
 import { UPLOAD_DIR, saveImage } from "../src/lib/storage";
 import { fromClubTime } from "../src/lib/dates";
 
@@ -263,6 +263,18 @@ async function reset() {
   await rm(path.join(UPLOAD_DIR, "images"), { recursive: true, force: true });
 }
 
+/** When run as root (the Docker seed task), give uploaded files to the app user (UPLOADS_OWNER="uid:gid"). */
+async function fixOwnership(dir: string) {
+  const owner = process.env.UPLOADS_OWNER?.match(/^(\d+):(\d+)$/);
+  if (!owner || process.getuid?.() !== 0 || !existsSync(dir)) return;
+  const [uid, gid] = [Number(owner[1]), Number(owner[2])];
+  const walk = async (p: string) => {
+    await chown(p, uid, gid);
+    if ((await stat(p)).isDirectory()) for (const f of await readdir(p)) await walk(path.join(p, f));
+  };
+  await walk(dir);
+}
+
 async function main() {
   guard();
   if (process.argv.includes("--reset")) await reset();
@@ -280,6 +292,7 @@ async function main() {
   await seedPhotos();
   console.log("Seeding content…");
   await seedContent();
+  await fixOwnership(UPLOAD_DIR);
   const [{ n }] = await db.select({ n: sql<number>`count(*)::int` }).from(images);
   console.log(`Done. ${n} images in the database.`);
   process.exit(0);

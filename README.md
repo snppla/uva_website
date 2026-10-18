@@ -111,6 +111,22 @@ There are no default or temporary passwords. Every admin chooses their own throu
 
 Only a hash of each link's token is stored, so links can't be recovered from the database or backups.
 
+### Seeding a server (sandbox)
+
+The seed photos and `data/seed-content.json` are not in git. Copy them from your machine to the
+checkout on the server, then run the one-off `seed` task:
+
+```bash
+# from your machine (project root)
+rsync -av --mkpath data/seed-photos data/seed-content.json user@server:/path/to/checkout/data/
+
+# on the server, in that checkout
+docker compose --profile tools run --rm --build seed           # add --reset to wipe content first
+```
+
+It writes into that stack's database and uploads volume. `--reset` deletes all posts, events,
+albums, photos and page settings before seeding (admin accounts and members are kept).
+
 ### Updating
 
 ```bash

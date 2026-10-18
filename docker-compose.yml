@@ -40,6 +40,26 @@ services:
     environment:
       TUNNEL_TOKEN: ${TUNNEL_TOKEN:?set TUNNEL_TOKEN in .env}
 
+  # Not started by `up`. Seeds the database with photos/content copied to ./data:
+  #   docker compose --profile tools run --rm --build seed
+  seed:
+    profiles: ["tools"]
+    build:
+      context: .
+      target: tools
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgres://club:${POSTGRES_PASSWORD}@db:5432/club
+      UPLOAD_DIR: /data/uploads
+      UPLOADS_OWNER: "100:101" # the app user in the main image
+    volumes:
+      - uploads:/data/uploads
+      - ./data/seed-photos:/app/data/seed-photos:ro
+      - ./data/seed-content.json:/app/data/seed-content.json:ro
+    entrypoint: ["npx", "tsx", "--conditions=react-server", "scripts/seed-dev.ts", "--force"]
+
   # Once a day: dump the database and archive uploads into ./backups, keeping 14 days.
   backup:
     image: postgres:17-alpine
