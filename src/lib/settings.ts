@@ -35,7 +35,7 @@ export const SETTINGS = {
   fieldAddress: {
     label: "Flying field location (shown in footer)",
     type: "textarea",
-    default: "Jordan River Parkway RC Field\nSaratoga Springs, Utah",
+    default: "Jordan River Parkway RC Field\nSaratoga Springs, Utah\n( 40.363372, -111.901728 )",
   },
   contactEmail: {
     label: "Contact email (shown in footer)",
