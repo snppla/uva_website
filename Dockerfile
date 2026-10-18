@@ -4,12 +4,6 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci
 
-# One-off tasks such as seeding a database (docker compose --profile tools run seed)
-FROM node:22-alpine AS tools
-WORKDIR /app
-COPY --from=deps /app/node_modules ./node_modules
-COPY . .
-
 FROM node:22-alpine AS build
 WORKDIR /app
 ENV NEXT_TELEMETRY_DISABLED=1
@@ -24,7 +18,7 @@ ENV NODE_ENV=production \
     PORT=3000 \
     HOSTNAME=0.0.0.0 \
     UPLOAD_DIR=/data/uploads
-# Fixed IDs so other containers (backups, seeding) can give files to this user.
+# Fixed IDs so files in shared volumes keep a predictable owner.
 RUN addgroup -S -g 101 app && adduser -S -u 100 -G app app && mkdir -p /data/uploads && chown -R app:app /data
 COPY --from=build --chown=app:app /app/.next/standalone ./
 COPY --from=build --chown=app:app /app/.next/static ./.next/static

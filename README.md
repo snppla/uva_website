@@ -111,21 +111,28 @@ There are no default or temporary passwords. Every admin chooses their own throu
 
 Only a hash of each link's token is stored, so links can't be recovered from the database or backups.
 
-### Seeding a server (sandbox)
+### Seeding a deployed site
 
-The seed photos and `data/seed-content.json` are not in git. Copy them from your machine to the
-checkout on the server, then run the one-off `seed` task:
+Club photos and content can be uploaded from your computer through the site's import API. The
+photos (`data/seed-photos/`) and `data/seed-content.json` stay on your machine; they're not in git.
 
-```bash
-# from your machine (project root)
-rsync -av --mkpath data/seed-photos data/seed-content.json user@server:/path/to/checkout/data/
+1. On the server (e.g. in Dokploy's environment settings), set `SEED_API_TOKEN` to a long random
+   value (`openssl rand -hex 32`) and redeploy. Without it the import API doesn't exist (404).
+2. On your computer, put the same value in `.env.seed` (gitignored):
+   ```env
+   SEED_API_TOKEN=...
+   ```
+3. Run:
+   ```bash
+   npm run seed:remote -- https://sand.utahvalleyaeromodelers.com            # add what's missing
+   npm run seed:remote -- https://sand.utahvalleyaeromodelers.com --reset    # wipe content first
+   ```
+   It's safe to re-run: photos already uploaded are skipped. `--reset` asks you to type the
+   hostname, then deletes all posts, events, albums, photos and page settings (admin accounts
+   and members are kept).
+4. Remove `SEED_API_TOKEN` from the server afterwards to switch the import API off.
 
-# on the server, in that checkout
-docker compose --profile tools run --rm --build seed           # add --reset to wipe content first
-```
-
-It writes into that stack's database and uploads volume. `--reset` deletes all posts, events,
-albums, photos and page settings before seeding (admin accounts and members are kept).
+For the local dev database, `npm run db:seed` (`-- --reset`) does the same directly.
 
 ### Updating
 

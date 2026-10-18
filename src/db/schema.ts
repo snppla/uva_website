@@ -52,6 +52,8 @@ export const images = pgTable("images", {
     onDelete: "set null",
   }),
   key: text("key").notNull().unique(),
+  // Where an imported photo came from (e.g. "fb:1234"), so re-imports skip it.
+  sourceRef: text("source_ref").unique(),
   caption: text("caption").notNull().default(""),
   width: integer("width").notNull(),
   height: integer("height").notNull(),
