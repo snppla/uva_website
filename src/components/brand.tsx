@@ -8,12 +8,11 @@ export function PlaneIcon({ className = "h-6 w-6" }: { className?: string }) {
   );
 }
 
-/** Round orange badge with a plane, used as the club mark. */
+/** The club's round UVA logo badge. */
 export function Badge({ className = "h-10 w-10" }: { className?: string }) {
   return (
-    <span className={`inline-flex shrink-0 items-center justify-center rounded-full bg-accent-500 text-white shadow-inner ring-2 ring-white/20 ${className}`}>
-      <PlaneIcon className="h-[60%] w-[60%] -rotate-45" />
-    </span>
+    // eslint-disable-next-line @next/next/no-img-element
+    <img src="/logo.svg" alt="" width={256} height={256} className={`shrink-0 rounded-full object-cover ring-2 ring-white/20 ${className}`} />
   );
 }
 

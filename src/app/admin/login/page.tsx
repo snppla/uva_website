@@ -13,7 +13,7 @@ export default function LoginPage() {
     <div className="flex flex-1 items-center justify-center bg-gradient-to-br from-brand-950 to-brand-700 p-4">
       <div className="card w-full max-w-sm p-8">
         <div className="mb-6 text-center">
-          <Badge className="mx-auto h-12 w-12" />
+          <Badge className="mx-auto block h-14 w-14" />
           <h1 className="heading mt-3 text-2xl text-brand-950">{site.name}</h1>
           <p className="text-sm text-slate-500">Officer login</p>
         </div>
