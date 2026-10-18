@@ -1,0 +1,63 @@
+# Production stack: Postgres + the website + Cloudflare Tunnel + nightly backups.
+# No ports are published: visitors reach the site through Cloudflare via the tunnel.
+# Configure by copying .env.production.example to .env and filling it in.
+services:
+  db:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: club
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: club
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U club"]
+      interval: 5s
+      retries: 10
+
+  app:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgres://club:${POSTGRES_PASSWORD}@db:5432/club
+      SESSION_SECRET: ${SESSION_SECRET:?set SESSION_SECRET in .env}
+      SITE_URL: ${SITE_URL:-}
+    volumes:
+      - uploads:/data/uploads
+
+  # Outbound connection to Cloudflare. Cloudflare terminates HTTPS and forwards
+  # requests through the tunnel to http://app:3000 (set in the Cloudflare dashboard).
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    restart: unless-stopped
+    depends_on:
+      - app
+    command: tunnel --no-autoupdate run
+    environment:
+      TUNNEL_TOKEN: ${TUNNEL_TOKEN:?set TUNNEL_TOKEN in .env}
+
+  # Once a day: dump the database and archive uploads into ./backups, keeping 14 days.
+  backup:
+    image: postgres:17-alpine
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      PGHOST: db
+      PGUSER: club
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+      PGDATABASE: club
+    volumes:
+      - ./backups:/backups
+      - uploads:/uploads:ro
+      - ./deploy/backup.sh:/backup.sh:ro
+    entrypoint: ["sh", "-c", "while true; do sh /backup.sh; sleep 86400; done"]
+
+volumes:
+  pgdata:
+  uploads:

@@ -1,26 +1,64 @@
 @import "tailwindcss";
-
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@plugin "@tailwindcss/typography";
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-barlow);
+  --font-display: var(--font-barlow-condensed);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* Club palette: deep "night sky" navy + Utah sunset orange */
+@theme {
+  --color-brand-50: #eef4fb;
+  --color-brand-100: #d9e6f5;
+  --color-brand-200: #b6cdea;
+  --color-brand-300: #86abd9;
+  --color-brand-400: #5584c3;
+  --color-brand-500: #3466ab;
+  --color-brand-600: #264f8f;
+  --color-brand-700: #1f4075;
+  --color-brand-800: #1c3661;
+  --color-brand-900: #172b4d;
+  --color-brand-950: #0e1a31;
+
+  --color-accent-300: #fdb47a;
+  --color-accent-400: #fb8b3c;
+  --color-accent-500: #f26b1d;
+  --color-accent-600: #d9530c;
+  --color-accent-700: #b4410d;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  @apply bg-slate-50 text-slate-800;
+}
+
+/* Shared form styling used across the admin panel */
+@utility input {
+  @apply block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm shadow-sm
+    focus:border-brand-500 focus:ring-2 focus:ring-brand-200 focus:outline-none;
+}
+@utility label {
+  @apply mb-1 block text-sm font-medium text-slate-700;
+}
+@utility btn {
+  @apply inline-flex items-center justify-center gap-2 rounded-md px-4 py-2 text-sm font-semibold
+    transition-colors disabled:cursor-not-allowed disabled:opacity-60;
+}
+@utility btn-primary {
+  @apply btn bg-brand-700 text-white hover:bg-brand-800;
+}
+@utility btn-secondary {
+  @apply btn border border-slate-300 bg-white text-slate-700 hover:bg-slate-100;
+}
+@utility btn-accent {
+  @apply btn bg-accent-500 text-white shadow-sm hover:bg-accent-600;
+}
+@utility btn-danger {
+  @apply btn bg-red-600 text-white hover:bg-red-700;
+}
+/* Condensed uppercase headings, aviation-signage style */
+@utility heading {
+  @apply font-display font-bold tracking-wide uppercase;
+}
+@utility card {
+  @apply rounded-xl border border-slate-200 bg-white shadow-sm;
 }
