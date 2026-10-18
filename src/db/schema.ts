@@ -108,7 +108,10 @@ export const membershipPlans = pgTable("membership_plans", {
   name: text("name").notNull(),
   price: text("price").notNull(), // display text, e.g. "$60 / year"
   description: text("description").notNull().default(""),
-  paypalUrl: text("paypal_url").notNull(),
+  // Either a PayPal payment link, or the ID of a PayPal "Pay Now" button
+  // (hosted_button_id); with a button ID the page collects member details too.
+  paypalUrl: text("paypal_url").notNull().default(""),
+  paypalButtonId: text("paypal_button_id").notNull().default(""),
   sortOrder: integer("sort_order").notNull().default(0),
 });
 

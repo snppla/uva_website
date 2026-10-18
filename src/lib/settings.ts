@@ -30,7 +30,7 @@ export const SETTINGS = {
     label: "Membership page introduction",
     type: "markdown",
     default:
-      "Membership runs for one year and supports the club, the field and club events. All members must also hold a current membership in the [Academy of Model Aeronautics (AMA)](https://www.modelaircraft.org/).\n\nChoose your membership type below to pay securely with PayPal. **Please include your full name and AMA number in the PayPal note** so we can update your record.",
+      "Club membership runs for the **calendar year** (January through December). Adult dues are **$75**.\n\nA current [Academy of Model Aeronautics (AMA)](https://www.modelaircraft.org/) membership is required to fly at the field, and club membership can't be approved without one.\n\nOnce your payment comes through, a club officer will email you club information, the field rules and the **gate access code**. Please take time to read them so we can keep the field safe and friendly.\n\n**Youth members** join free with an active AMA Youth membership. Email the treasurer at [treasurer.uva@gmail.com](mailto:treasurer.uva@gmail.com) with your first and last name, AMA number, email, phone and address.\n\n**Paying by check?** Email [treasurer.uva@gmail.com](mailto:treasurer.uva@gmail.com) with the same details and you'll be told where to send it.",
   },
   fieldAddress: {
     label: "Flying field location (shown in footer)",

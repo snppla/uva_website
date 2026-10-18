@@ -16,11 +16,19 @@ export default async function MembershipAdmin() {
       </AdminTitle>
       <div className="mb-6 max-w-3xl space-y-2 text-sm text-slate-600">
         <p>
-          Each membership option gets its own <strong>Pay with PayPal</strong> button on the Membership page. To create
-          a link: log in to PayPal → <em>Pay &amp; Get Paid</em> → <em>PayPal buttons</em> (or <em>Payment links</em>) →
-          create a &quot;Buy Now&quot; link with the price, then copy the link URL here. A{" "}
-          <code>https://paypal.me/yourclub/60</code> link also works.
+          Each membership option appears on the Membership page with a way to pay through PayPal. Use either:
         </p>
+        <ul className="list-disc space-y-1 pl-5">
+          <li>
+            <strong>A PayPal button ID</strong> (recommended), from a PayPal &quot;Pay Now&quot; button, e.g.{" "}
+            <code>ABCD1234EFGH5</code>. The page asks for the member&apos;s name, email, phone, AMA # and address and
+            sends them to PayPal with the payment, so they show up on the payment in PayPal.
+          </li>
+          <li>
+            <strong>A PayPal link</strong>, such as a PayPal payment link or <code>https://paypal.me/yourclub/75</code>.
+            Members just get a button; ask them to put their name and AMA # in the PayPal note.
+          </li>
+        </ul>
         <p>
           When a payment arrives, open <Link href="/admin/members" className="text-brand-700 underline">Members</Link> and
           click <em>Renew +1 yr</em> for that member. The intro text above the buttons is edited under{" "}
@@ -50,7 +58,14 @@ function PlanForm({ plan }: { plan?: MembershipPlan }) {
           <Field label="Price (as displayed)" name="price" defaultValue={plan?.price} placeholder="e.g. $60 / year" required />
         </div>
         <TextArea label="Description" name="description" rows={2} defaultValue={plan?.description} />
-        <Field label="PayPal link" name="paypalUrl" type="url" defaultValue={plan?.paypalUrl} placeholder="https://www.paypal.com/ncp/payment/…" required />
+        <Field
+          label="PayPal button ID"
+          name="paypalButtonId"
+          defaultValue={plan?.paypalButtonId}
+          placeholder="e.g. ABCD1234EFGH5"
+          hint="The hosted_button_id of a PayPal “Pay Now” button. Leave blank to use a link instead."
+        />
+        <Field label="…or PayPal link" name="paypalUrl" type="url" defaultValue={plan?.paypalUrl} placeholder="https://www.paypal.com/ncp/payment/…" />
         <Field label="Sort order" name="sortOrder" type="number" defaultValue={plan?.sortOrder ?? 0} />
         <SubmitButton>{plan ? "Save" : "Add option"}</SubmitButton>
       </ActionForm>

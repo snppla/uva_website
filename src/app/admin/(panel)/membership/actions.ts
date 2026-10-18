@@ -13,10 +13,15 @@ export async function savePlan(_prev: FormState, fd: FormData): Promise<FormStat
     price: str(fd, "price"),
     description: str(fd, "description"),
     paypalUrl: str(fd, "paypalUrl"),
+    paypalButtonId: str(fd, "paypalButtonId").toUpperCase(),
     sortOrder: int(fd, "sortOrder"),
   };
   if (!values.name || !values.price) return { error: "Name and price are required." };
-  if (!/^https:\/\/(www\.)?(paypal\.com|paypal\.me)\//i.test(values.paypalUrl)) {
+  if (!values.paypalUrl && !values.paypalButtonId) return { error: "Enter a PayPal button ID or a PayPal link." };
+  if (values.paypalButtonId && !/^[A-Z0-9]{6,20}$/.test(values.paypalButtonId)) {
+    return { error: "That doesn't look like a PayPal button ID (letters and numbers, like ABCD1234EFGH5)." };
+  }
+  if (values.paypalUrl && !/^https:\/\/(www\.)?(paypal\.com|paypal\.me)\//i.test(values.paypalUrl)) {
     return { error: "The payment link must be a PayPal link (https://www.paypal.com/… or https://paypal.me/…)." };
   }
   if (id) await db.update(membershipPlans).set(values).where(eq(membershipPlans.id, id));
