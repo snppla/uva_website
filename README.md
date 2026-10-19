@@ -158,6 +158,25 @@ docker compose run --rm -v "$PWD/backups:/backups" --entrypoint sh app \
   -c "tar -xzf /backups/uploads-2026-10-18.tar.gz -C /data/uploads"
 ```
 
+### Database access
+
+Postgres listens only on the server's `127.0.0.1:5432`, so reach it through an SSH tunnel. From
+your computer:
+
+```bash
+ssh -N -L 5433:127.0.0.1:5432 you@your-server     # leave this running
+DATABASE_URL=postgres://club:<POSTGRES_PASSWORD>@localhost:5433/club npm run db:studio
+```
+
+`db:studio` opens Drizzle Studio, a table browser and editor in your web browser. Any Postgres
+client (DBeaver, TablePlus, `psql`) works through the same tunnel. Without `DATABASE_URL` it
+opens the local dev database from `.env.local`.
+
+For a quick query on the server itself: `docker compose exec db psql -U club`.
+
+Change the schema through migrations (see above), not by hand. Before editing data directly,
+take a dump: `docker compose exec db pg_dump -U club club > before.sql`.
+
 ### Logs
 
 ```bash

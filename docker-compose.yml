@@ -9,6 +9,10 @@ services:
       POSTGRES_USER: club
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
       POSTGRES_DB: club
+    # Reachable only from the server itself, for an SSH tunnel (see README "Database access").
+    # Keep the 127.0.0.1: Docker bypasses ufw, so a bare "5432:5432" would be public.
+    ports:
+      - "127.0.0.1:5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:

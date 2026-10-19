@@ -9,6 +9,7 @@
     "lint": "eslint",
     "db:up": "docker compose -f docker-compose.dev.yml up -d",
     "db:generate": "drizzle-kit generate",
+    "db:studio": "node --env-file-if-exists=.env.local node_modules/drizzle-kit/bin.cjs studio",
     "typecheck": "tsc --noEmit",
     "db:seed": "tsx --conditions=react-server --env-file=.env.local scripts/seed-dev.ts",
     "seed:remote": "tsx --env-file-if-exists=.env.seed scripts/seed-remote.ts"
