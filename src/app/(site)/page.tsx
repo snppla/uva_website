@@ -32,7 +32,7 @@ export default function HomePage() {
           <Intro />
         </Suspense>
 
-        <div className="grid gap-12 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-12 lg:grid-cols-3">
           <section className="lg:col-span-2">
             <SectionTitle title="Latest news" action={<ViewAll href="/blog" />} />
             <Suspense fallback={<Loading />}>
