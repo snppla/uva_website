@@ -16,7 +16,8 @@ const display = Barlow_Condensed({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL(site.url),
+  // SITE_URL lets each deployment (live or test) point link previews at itself.
+  metadataBase: new URL(process.env.SITE_URL || site.url),
   title: { default: site.name, template: `%s | ${site.name}` },
   description: site.tagline,
   openGraph: { type: "website", siteName: site.name, description: site.tagline, locale: "en_US" },

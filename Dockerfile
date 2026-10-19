@@ -9,6 +9,8 @@ WORKDIR /app
 ENV NEXT_TELEMETRY_DISABLED=1
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
+# Link previews use the site address, which is fixed into the prerendered pages.
+ARG SITE_URL
 RUN npm run build
 
 FROM node:22-alpine AS run
