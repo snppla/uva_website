@@ -20,7 +20,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(process.env.SITE_URL || site.url),
   title: { default: site.name, template: `%s | ${site.name}` },
   description: site.tagline,
-  openGraph: { type: "website", siteName: site.name, description: site.tagline, locale: "en_US" },
+  openGraph: { type: "website", url: "./", siteName: site.name, description: site.tagline, locale: "en_US" },
   twitter: { card: "summary_large_image" },
 };
 
