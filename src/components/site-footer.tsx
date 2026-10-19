@@ -48,6 +48,11 @@ export async function SiteFooter() {
             </Link>
           </li>
           <li>
+            <a href={site.sourceUrl} target="_blank" rel="noopener noreferrer" className="text-brand-300 hover:text-white">
+              Website source on GitHub
+            </a>
+          </li>
+          <li>
             <Link href="/admin" className="text-brand-300 hover:text-white">
               Officer login
             </Link>

@@ -3,6 +3,8 @@
 Website and admin panel for the model airplane club: news posts, events calendar, photo gallery,
 downloadable documents, PayPal membership renewal, and a member roster.
 
+Built for the Utah Valley Aeromodelers at **[utahvalleyaeromodelers.com](https://utahvalleyaeromodelers.com)**.
+
 **Stack:** Next.js 16 (App Router, TypeScript, Tailwind) · PostgreSQL with Drizzle ORM ·
 Docker Compose, served over HTTPS through a Cloudflare Tunnel.
 

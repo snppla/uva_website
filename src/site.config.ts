@@ -7,6 +7,7 @@ export const site = {
   location: "Saratoga Springs, Utah",
   // All event times are entered and displayed in this time zone.
   timeZone: "America/Denver",
+  sourceUrl: "https://github.com/snppla/uva_website",
   nav: [
     { href: "/about", label: "About" },
     { href: "/blog", label: "News" },
