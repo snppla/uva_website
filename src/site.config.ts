@@ -5,7 +5,7 @@ export const site = {
   // Public address, used for absolute links in link previews.
   url: "https://utahvalleyaeromodelers.com",
   shortName: "UVA",
-  tagline: "Radio-control flying on the Jordan River Parkway in Saratoga Springs, Utah.",
+  tagline: "Radio-control flying on the Jordan River in Saratoga Springs, Utah.",
   location: "Saratoga Springs, Utah",
   // All event times are entered and displayed in this time zone.
   timeZone: "America/Denver",
