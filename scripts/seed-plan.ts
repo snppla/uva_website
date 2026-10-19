@@ -13,16 +13,15 @@ export type Plan = { albums: PlanAlbum[]; content: SeedContent | null };
 
 // Albums used for other purposes rather than shown in the gallery.
 const NOT_GALLERY = /^(cover photos|logo|profile pictures)$/i;
-// Photos posted outside any album are grouped by day; smaller days go to "More club photos".
-const MIN_DAY_ALBUM = 4;
+// A year with fewer loose photos than this goes into "More club photos" instead.
+const MIN_YEAR_ALBUM = 4;
 const MONTHS = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
 
 type ManifestPhoto = { fbid: string; file: string; caption: string; date: string | null };
-type ManifestAlbum = { title: string; slug: string; photos: ManifestPhoto[]; date?: string; description?: string; dir?: string };
+// date: undefined = work it out from the title/photos; null = deliberately undated.
+type ManifestAlbum = { title: string; slug: string; photos: ManifestPhoto[]; date?: string | null; description?: string; dir?: string };
 type Manifest = { source: string; albums: ManifestAlbum[] };
 type ContentFile = {
-  /** Name a day's photo group: { "2025-06-07": "Open House 2025" } */
-  albumNames?: Record<string, string>;
   /** Photos (by Facebook id) to leave out: screenshots, personal info, not club-related… */
   exclude?: string[];
   /** Hand-picked albums: photos (by Facebook id) pulled out of the timeline/group photos. */
@@ -66,7 +65,10 @@ function dateForAlbum(title: string, posted: Date | null): string | null {
   return `${local.getFullYear()}-${String(local.getMonth() + 1).padStart(2, "0")}-${String(local.getDate()).padStart(2, "0")}`;
 }
 
-/** Split loose timeline/group photos into hand-picked albums, per-day albums and a catch-all. */
+/**
+ * Split loose timeline/group photos into hand-picked albums (seed-content.json)
+ * and, for the rest, one "Around the field <year>" album per year.
+ */
 function splitLoosePhotos(list: ManifestAlbum[], cfg: ContentFile) {
   const picks = cfg.albums ?? [];
   const claimed = new Set(picks.flatMap((a) => a.fbids));
@@ -78,26 +80,28 @@ function splitLoosePhotos(list: ManifestAlbum[], cfg: ContentFile) {
     }
     for (const pick of picks) {
       const photos = album.photos.filter((p) => pick.fbids.includes(p.fbid));
-      if (photos.length) out.push({ ...pick, slug: slugify(pick.title), photos, dir: album.slug });
+      // Hand-picked albums without a date span years (e.g. "Builds & projects").
+      if (photos.length) out.push({ ...pick, date: pick.date ?? null, slug: slugify(pick.title), photos, dir: album.slug });
     }
-    const byDay = new Map<string, ManifestPhoto[]>();
+    const byYear = new Map<string, ManifestPhoto[]>();
     for (const p of album.photos) {
       if (claimed.has(p.fbid)) continue;
-      const d = parseDate(p.date);
-      const day = d ? d.toISOString().slice(0, 10) : "undated";
-      byDay.set(day, [...(byDay.get(day) ?? []), p]);
+      const year = parseDate(p.date)?.getFullYear();
+      const title = year ? `Around the field ${year}` : "More club photos";
+      byYear.set(title, [...(byYear.get(title) ?? []), p]);
     }
-    const leftovers: ManifestPhoto[] = [];
-    for (const [day, photos] of byDay) {
-      if (day !== "undated" && photos.length >= MIN_DAY_ALBUM) {
-        const label = new Date(`${day}T12:00:00Z`).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric", timeZone: "UTC" });
-        const title = cfg.albumNames?.[day] ?? `Club photos – ${label}`;
-        out.push({ title, slug: slugify(title), photos, dir: album.slug, date: day });
-      } else {
-        leftovers.push(...photos);
+    const more: ManifestPhoto[] = byYear.get("More club photos") ?? [];
+    for (const [title, photos] of byYear) {
+      if (title === "More club photos") continue;
+      if (photos.length < MIN_YEAR_ALBUM) {
+        more.push(...photos);
+        continue;
       }
+      // Date a year's album by its newest photo, so albums sort by recency.
+      const newest = photos.map((p) => parseDate(p.date)).filter((d): d is Date => !!d).sort((a, b) => +b - +a)[0];
+      out.push({ title, slug: slugify(title), photos, dir: album.slug, date: newest?.toISOString().slice(0, 10) });
     }
-    if (leftovers.length) out.push({ title: "More club photos", slug: "more-club-photos", photos: leftovers, dir: album.slug });
+    if (more.length) out.push({ title: "More club photos", slug: "more-club-photos", photos: more, dir: album.slug, date: null });
   }
   return out;
 }
@@ -130,7 +134,7 @@ export function buildPlan(dataDir = path.resolve("data")): Plan {
       const dates = album.photos.map((p) => parseDate(p.date)).filter((d): d is Date => !!d);
       const latest = dates.length ? new Date(Math.max(...dates.map(Number))) : null;
       const earliest = dates.length ? new Date(Math.min(...dates.map(Number))) : null;
-      const date = album.date ?? dateForAlbum(album.title, earliest);
+      const date = album.date !== undefined ? album.date : dateForAlbum(album.title, earliest);
       const slug = slugify(album.title);
       const planned: PlanAlbum = bySlug.get(slug) ?? {
         title: album.title.replace("Pictues", "Pictures"),
