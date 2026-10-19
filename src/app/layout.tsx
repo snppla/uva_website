@@ -16,8 +16,11 @@ const display = Barlow_Condensed({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(site.url),
   title: { default: site.name, template: `%s | ${site.name}` },
   description: site.tagline,
+  openGraph: { type: "website", siteName: site.name, description: site.tagline, locale: "en_US" },
+  twitter: { card: "summary_large_image" },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

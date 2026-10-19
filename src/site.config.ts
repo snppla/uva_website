@@ -2,6 +2,8 @@
 // editable in the admin panel; these values change rarely and live in code.
 export const site = {
   name: "Utah Valley Aeromodelers",
+  // Public address, used for absolute links in link previews.
+  url: "https://utahvalleyaeromodelers.com",
   shortName: "UVA",
   tagline: "Radio-control flying on the Jordan River Parkway in Saratoga Springs, Utah.",
   location: "Saratoga Springs, Utah",
