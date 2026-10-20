@@ -15,7 +15,16 @@ export async function SiteFooter() {
       </div>
       <div>
         <h2 className="heading text-base text-white">Visit</h2>
-        {settings.fieldAddress && <p className="mt-2 whitespace-pre-line text-brand-200">{settings.fieldAddress}</p>}
+        {settings.fieldAddress && (
+          <a
+            href={site.field.mapUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-2 block whitespace-pre-line text-brand-200 hover:text-white"
+          >
+            {settings.fieldAddress}
+          </a>
+        )}
         {settings.contactEmail && (
           <a href={`mailto:${settings.contactEmail}`} className="mt-2 block text-brand-200 hover:text-white">
             {settings.contactEmail}
