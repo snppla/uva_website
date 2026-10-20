@@ -3,6 +3,8 @@
  *
  *   npm run seed:remote -- https://sand.example.org            add anything not already there
  *   npm run seed:remote -- https://sand.example.org --reset    delete all content first
+ *   npm run seed:remote -- https://sand.example.org --photos-only
+ *       add new photos only; leave page settings, events and posts as they are on the site
  *
  * The site must have SEED_API_TOKEN set; put the same value in .env.seed here
  * (SEED_API_TOKEN=...) or in your environment. Safe to re-run after an
@@ -88,7 +90,7 @@ async function main() {
     await Promise.all(workers);
     process.stdout.write(`\r  ${done}/${total} photos  (${album.title})\n`);
   }
-  if (plan.content) {
+  if (plan.content && !process.argv.includes("--photos-only")) {
     const r = await api("content", JSON.stringify(plan.content));
     console.log(`Content: ${r.settings} settings, ${r.eventsAdded} new events, ${r.postsAdded} new posts`);
   }

@@ -1,6 +1,6 @@
 /**
  * Works out what to import from data/seed-photos/<source>/manifest.json (the
- * Facebook export) and data/seed-content.json. Pure: reads files, touches no
+ * Facebook exports and the Wayback Machine copy of the old site) and data/seed-content.json. Pure: reads files, touches no
  * database. Used by seed-dev.ts (local) and seed-remote.ts (via the site's API).
  */
 import { existsSync, readFileSync, readdirSync } from "node:fs";
@@ -36,7 +36,8 @@ type ContentFile = {
   posts?: (Omit<SeedContent["posts"][number], "coverRef"> & { cover?: { fbid: string } })[];
 };
 
-const ref = (fbid: string) => `fb:${fbid}`;
+// Facebook photos use their numeric id; other sources (e.g. "wayback:…") carry their own prefix.
+const ref = (fbid: string) => (fbid.includes(":") ? fbid : `fb:${fbid}`);
 export const slugify = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 80);
 
 function parseDate(text: string | null) {

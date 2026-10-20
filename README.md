@@ -128,8 +128,10 @@ photos (`data/seed-photos/`) and `data/seed-content.json` stay on your machine; 
    ```bash
    npm run seed:remote -- https://sand.utahvalleyaeromodelers.com            # add what's missing
    npm run seed:remote -- https://sand.utahvalleyaeromodelers.com --reset    # wipe content first
+   npm run seed:remote -- https://sand.utahvalleyaeromodelers.com --photos-only  # keep site's page text
    ```
-   It's safe to re-run: photos already uploaded are skipped. `--reset` asks you to type the
+   It's safe to re-run: photos already uploaded are skipped. Without `--photos-only`, the page
+   settings from `seed-content.json` replace whatever is on the site. `--reset` asks you to type the
    hostname, then deletes all posts, events, albums, photos and page settings (admin accounts
    and members are kept).
 4. Remove `SEED_API_TOKEN` from the server afterwards to switch the import API off.
