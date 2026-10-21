@@ -29,7 +29,7 @@ Code layout:
 - `src/app/(site)/` — public pages · `src/app/admin/` — admin panel
 - `src/db/schema.ts` — database tables · `drizzle/` — generated SQL migrations
 - `src/lib/` — auth, data queries, file storage, dates, markdown
-- `deploy/` — backup script
+- `deploy/` — backup script, production-to-sandbox copy script
 
 How renewals work: a member clicks the PayPal button for their membership type and pays. When
 PayPal emails you about the payment, open **Admin → Members** and click **Renew +1 yr** for that
@@ -160,14 +160,41 @@ docker compose run --rm -v "$PWD/backups:/backups" --entrypoint sh app \
   -c "tar -xzf /backups/uploads-2026-10-18.tar.gz -C /data/uploads"
 ```
 
-### Database access
+### Sandbox
 
-Postgres listens only on the server's `127.0.0.1:5432`, so reach it through an SSH tunnel. From
-your computer:
+The sandbox runs the same stack from `docker-compose.sandbox.yml`, which differs only in its
+Postgres port (5433), so it can share a server with production. In Dokploy, set the sandbox
+app's compose path to `./docker-compose.sandbox.yml` and give it its own environment (tunnel
+token, secrets, `SITE_URL`). On the server, add `-f docker-compose.sandbox.yml` to the
+`docker compose` commands in this README when working on the sandbox. Keep the two compose files in
+step when changing either.
+
+### Copying production to the sandbox
+
+When both run on the same server (e.g. two Dokploy compose apps), refresh the sandbox with a copy
+of production's database and uploaded files. On the server, from a checkout of this repository:
 
 ```bash
-ssh -N -L 5433:127.0.0.1:5432 you@your-server     # leave this running
+docker compose ls                                            # find the two project names
+sh deploy/copy-to-sandbox.sh <production project> <sandbox project>
+```
+
+It asks you to type the sandbox's name, stops the sandbox site, replaces its database and files,
+and starts it again (applying any newer migrations). Production is only read. Afterwards, log in to
+the sandbox with a production admin account. The sandbox then shows production's real PayPal
+buttons and member list, so treat it as carefully as production.
+
+### Database access
+
+Postgres listens only on the server's localhost, so reach it through an SSH tunnel: production on
+`127.0.0.1:5432`, the sandbox on `127.0.0.1:5433`. From your computer:
+
+```bash
+ssh -N -L 5433:127.0.0.1:5432 you@your-server     # production; leave this running
 DATABASE_URL=postgres://club:<POSTGRES_PASSWORD>@localhost:5433/club npm run db:studio
+
+ssh -N -L 5434:127.0.0.1:5433 you@your-server     # sandbox
+DATABASE_URL=postgres://club:<SANDBOX POSTGRES_PASSWORD>@localhost:5434/club npm run db:studio
 ```
 
 `db:studio` opens Drizzle Studio, a table browser and editor in your web browser. Any Postgres
