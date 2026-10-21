@@ -5,7 +5,10 @@ import { Markdown } from "@/lib/markdown";
 import { PayPalMemberForm } from "@/components/paypal-form";
 import { Container, Empty, Loading, PageHeader } from "@/components/ui";
 
-export const metadata: Metadata = { title: "Membership" };
+export const metadata: Metadata = {
+  title: "Membership",
+  description: "Join or renew your Utah Valley Aeromodelers membership to fly RC at the club field in Saratoga Springs, Utah County.",
+};
 
 export default function MembershipPage() {
   return (

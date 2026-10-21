@@ -32,8 +32,15 @@ export const SETTINGS = {
     default:
       "Club membership runs for the **calendar year** (January through December). Adult dues are **$75**.\n\nA current [Academy of Model Aeronautics (AMA)](https://www.modelaircraft.org/) membership is required to fly at the field, and club membership can't be approved without one.\n\nOnce your payment comes through, a club officer will email you club information, the field rules and the **gate access code**. Please take time to read them so we can keep the field safe and friendly.\n\n**Youth members** join free with an active AMA Youth membership. Email the treasurer at [treasurer.uva@gmail.com](mailto:treasurer.uva@gmail.com) with your first and last name, AMA number, email, phone and address.\n\n**Paying by check?** Email [treasurer.uva@gmail.com](mailto:treasurer.uva@gmail.com) with the same details and you'll be told where to send it.",
   },
+  fieldInfo: {
+    label: "Flying field page",
+    type: "markdown",
+    default:
+      "## An RC flying field in Utah County\n\nThe UVA field is a radio-control flying field on the Jordan River in Saratoga Springs, near the north shore of Utah Lake. It's a city park managed by the City of Saratoga Springs and is always open. It's an easy drive from Lehi, American Fork, Eagle Mountain, Orem and Provo.\n\n## Facilities\n\n- Paved runway\n- Covered pavilion and pit tables\n- Spectator seating\n\n## Flying here\n\nField rules and safety requirements are posted at the field, and everyone who flies is expected to follow them. A current [Academy of Model Aeronautics (AMA)](https://www.modelaircraft.org/) membership is required to fly.\n\nNew to RC? Come out to the field and say hello. There's usually someone happy to show you around. [Club membership](/membership) supports the field.",
+  },
   fieldAddress: {
     label: "Flying field location (shown in footer)",
+    hint: "Name, street, \"City, ST zip\" and \"(latitude, longitude)\" on separate lines. The Field page map and search engines use these.",
     type: "textarea",
     default: "Jordan River Parkway RC Field\nSaratoga Springs, Utah\n( 40.363372, -111.901728 )",
   },

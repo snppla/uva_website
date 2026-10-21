@@ -4,6 +4,7 @@ import { site } from "@/site.config";
 import { getPublishedPosts, getRecentPhotos, getSettings, getUpcomingEvents } from "@/lib/data";
 import { Markdown } from "@/lib/markdown";
 import { imageUrl } from "@/lib/urls";
+import { ClubJsonLd } from "@/components/club-json-ld";
 import { EventItem, PostCard } from "@/components/cards";
 import { Mountains, PlaneIcon } from "@/components/brand";
 import { Empty, Loading, SectionTitle } from "@/components/ui";
@@ -16,7 +17,7 @@ export default function HomePage() {
       </Suspense>
 
       <div className="relative z-10 mx-auto -mt-6 grid max-w-6xl gap-4 px-4 sm:-mt-10 md:grid-cols-3">
-        <Highlight title="The field" href="/about">
+        <Highlight title="The field" href="/field">
           A maintained runway and pit area on the Jordan River Parkway in Saratoga Springs, by the north shore of Utah Lake.
         </Highlight>
         <Highlight title="Every skill level" href="/membership">
@@ -30,6 +31,9 @@ export default function HomePage() {
       <div className="mx-auto max-w-6xl space-y-16 px-4 py-16">
         <Suspense fallback={<Loading />}>
           <Intro />
+        </Suspense>
+        <Suspense>
+          <ClubJsonLd />
         </Suspense>
 
         <div className="grid grid-cols-1 gap-12 lg:grid-cols-3">
