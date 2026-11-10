@@ -31,7 +31,7 @@ export default async function MembershipAdmin() {
         </ul>
         <p>
           When a payment arrives, open <Link href="/admin/members" className="text-brand-700 underline">Members</Link> and
-          click <em>Renew +1 yr</em> for that member. The intro text above the buttons is edited under{" "}
+          click <em>Renew</em> for that member. The intro text above the buttons is edited under{" "}
           <Link href="/admin/pages" className="text-brand-700 underline">Page content</Link>.
         </p>
       </div>

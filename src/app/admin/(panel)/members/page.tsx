@@ -3,7 +3,9 @@ import { asc } from "drizzle-orm";
 import { db, members } from "@/db";
 import { requireAdmin } from "@/lib/auth";
 import { addDays, clubDate, formatDay } from "@/lib/dates";
+import { canRenew, expiryAfterDues } from "@/lib/membership";
 import { AdminTitle } from "@/components/admin/fields";
+import { ConfirmButton } from "@/components/admin/forms";
 import { Empty } from "@/components/ui";
 import { renewMember } from "./actions";
 import { EXPIRING_DAYS, FILTERS, memberWhere, parseFilter } from "./filters";
@@ -80,12 +82,16 @@ export default async function MembersAdmin({ searchParams }: PageProps<"/admin/m
                       </span>
                     </td>
                     <td className="px-4 py-2.5 text-right">
-                      <form action={renewMember}>
-                        <input type="hidden" name="id" value={m.id} />
-                        <button className="text-xs font-semibold text-brand-700 hover:underline" title="Extend membership by one year">
-                          Renew +1 yr
-                        </button>
-                      </form>
+                      {canRenew(m.expiresOn, today) && (
+                        <ConfirmButton
+                          action={renewMember}
+                          fields={{ id: m.id }}
+                          className="btn-secondary px-3 py-1 text-xs"
+                          confirm={`Record dues paid today for ${m.firstName} ${m.lastName}? Their membership will run until ${formatDay(expiryAfterDues(today))}.`}
+                        >
+                          Renew
+                        </ConfirmButton>
+                      )}
                     </td>
                   </tr>
                 );
