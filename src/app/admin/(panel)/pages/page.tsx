@@ -19,9 +19,9 @@ export default async function PagesAdmin() {
           const hint = "hint" in s ? s.hint : undefined;
           switch (s.type) {
             case "markdown":
-              return <MarkdownEditor key={key} name={key} label={s.label} defaultValue={values[key]} rows={key === "about" ? 18 : 6} />;
+              return <MarkdownEditor key={key} name={key} label={s.label} defaultValue={values[key]} rows={key === "about" || key === "fieldInfo" ? 18 : 6} />;
             case "textarea":
-              return <TextArea key={key} name={key} label={s.label} defaultValue={values[key]} rows={2} hint={hint} />;
+              return <TextArea key={key} name={key} label={s.label} defaultValue={values[key]} rows={key === "fieldNotice" ? 4 : 2} hint={hint} />;
             case "image":
               return (
                 <div key={key}>

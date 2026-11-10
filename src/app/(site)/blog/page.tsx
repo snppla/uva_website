@@ -5,7 +5,10 @@ import { countPublishedPosts, getPublishedPosts } from "@/lib/data";
 import { PostCard } from "@/components/cards";
 import { Container, Empty, Loading, PageHeader } from "@/components/ui";
 
-export const metadata: Metadata = { title: "News" };
+export const metadata: Metadata = {
+  title: "News",
+  description: "News from Utah Valley Aeromodelers, the radio-control flying club in Saratoga Springs, Utah County.",
+};
 
 const PER_PAGE = 12;
 

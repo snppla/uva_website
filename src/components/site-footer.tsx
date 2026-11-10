@@ -1,10 +1,12 @@
 import Link from "next/link";
 import { getSettings } from "@/lib/data";
+import { directionsUrl, parseFieldLocation } from "@/lib/field";
 import { site } from "@/site.config";
 import { FacebookIcon, Logo } from "./brand";
 
 export async function SiteFooter() {
   const settings = await getSettings();
+  const field = parseFieldLocation(settings.fieldAddress);
   return (
     <div className="mx-auto grid max-w-6xl gap-10 px-4 py-12 text-sm sm:grid-cols-2 lg:grid-cols-4">
       <div className="lg:col-span-2">
@@ -15,14 +17,14 @@ export async function SiteFooter() {
       </div>
       <div>
         <h2 className="heading text-base text-white">Visit</h2>
-        {settings.fieldAddress && (
+        {field.lines.length > 0 && (
           <a
-            href={site.field.mapUrl}
+            href={directionsUrl(field)}
             target="_blank"
             rel="noopener noreferrer"
             className="mt-2 block whitespace-pre-line text-brand-200 hover:text-white"
           >
-            {settings.fieldAddress}
+            {field.lines.join("\n")}
           </a>
         )}
         {settings.contactEmail && (

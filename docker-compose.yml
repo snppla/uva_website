@@ -1,6 +1,7 @@
 # Production stack: Postgres + the website + Cloudflare Tunnel + nightly backups.
 # No ports are published: visitors reach the site through Cloudflare via the tunnel.
 # Configure by copying .env.production.example to .env and filling it in.
+# docker-compose.sandbox.yml is the same stack for the sandbox; keep the two in step.
 services:
   db:
     image: postgres:17-alpine

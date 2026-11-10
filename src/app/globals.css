@@ -25,6 +25,17 @@
   --color-accent-500: #f26b1d;
   --color-accent-600: #d9530c;
   --color-accent-700: #b4410d;
+
+  /* Weather page flying ratings */
+  --color-go: #1f8f4e;
+  --color-go-soft: #e5f5ec;
+  --color-caution: #b97800;
+  --color-caution-bar: #f2c230;
+  --color-caution-soft: #fff4d6;
+  --color-nogo: #c8323a;
+  --color-nogo-soft: #fde8e9;
+  --color-glare: #ee7a1a;
+  --color-glare-soft: #ffead6;
 }
 
 body {

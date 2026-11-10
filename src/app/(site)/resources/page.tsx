@@ -4,7 +4,10 @@ import { getResources } from "@/lib/data";
 import { formatSize, groupBy } from "@/lib/format";
 import { Container, Empty, Loading, PageHeader } from "@/components/ui";
 
-export const metadata: Metadata = { title: "Resources" };
+export const metadata: Metadata = {
+  title: "Resources",
+  description: "Club documents and downloads from Utah Valley Aeromodelers, the RC flying club in Saratoga Springs, Utah.",
+};
 
 export default function ResourcesPage() {
   return (

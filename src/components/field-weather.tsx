@@ -1,52 +1,54 @@
-import { getFieldWeather, type FieldConditions } from "@/lib/weather";
+import Link from "next/link";
+import { getSettings } from "@/lib/data";
+import { cardinal, r0, wx } from "@/lib/weather/calc";
+import { getFieldNow, type FieldNow } from "@/lib/weather/now";
+import { parseNotice } from "@/lib/weather/notice";
 
+// Full class names so Tailwind finds them; same colors as the Weather page's verdict.
+const VERDICT = [
+  { label: "Good flying", className: "bg-go-soft text-go" },
+  { label: "Flyable with caution", className: "bg-caution-soft text-caution" },
+  { label: "Not recommended", className: "bg-nogo-soft text-nogo" },
+];
+const CLOSED = { label: "Field closed", className: "bg-nogo-soft text-nogo" };
+
+/** Homepage card: current conditions and verdict at the field, linking to the full Weather page. */
 export async function FieldWeather() {
-  let weather: FieldConditions;
-  try {
-    weather = await getFieldWeather();
-  } catch {
-    return <p className="text-sm text-slate-500">Weather at the field is unavailable right now.</p>;
+  const [{ fieldNotice }, weather] = await Promise.all([
+    getSettings(),
+    getFieldNow().catch((): FieldNow | null => null),
+  ]);
+  const closed = !!parseNotice(fieldNotice)?.closed;
+
+  if (!weather) {
+    return (
+      <Link href="/weather" className="card block p-5 text-sm text-slate-500 hover:shadow-md">
+        Weather at the field is unavailable right now. <span className="text-brand-700">Try the Weather page →</span>
+      </Link>
+    );
   }
 
-  return (
-    <div className="card p-5">
-      <div className="flex items-end justify-between gap-3">
-        <p className="heading text-5xl leading-none text-brand-950">{weather.temperature}°</p>
-        <p className="heading text-right text-lg text-brand-800">{weather.sky}</p>
-      </div>
-      <p className="mt-4 flex items-start gap-2 text-slate-600">
-        <WindArrow degrees={weather.windDirection} />
-        <span>
-          {weather.windSpeed} mph from the {weather.windCompass}, gusting {weather.windGusts}
-        </span>
-      </p>
-      <p className="mt-3 text-xs text-slate-400">
-        <a href="https://open-meteo.com/" className="underline-offset-2 hover:text-slate-600 hover:underline" rel="noreferrer" target="_blank">
-          Open-Meteo
-        </a>
-      </p>
-    </div>
-  );
-}
+  const { now, a } = weather;
+  const sky = wx(now.code, now.isDay);
+  const verdict = closed ? CLOSED : VERDICT[a.lvl];
+  const reasons = a.reasons.filter((r) => r.l !== "g").map((r) => r.msg);
 
-function WindArrow({ degrees }: { degrees: number }) {
   return (
-    <svg
-      aria-hidden
-      className="mt-0.5 shrink-0 text-brand-700"
-      height="18"
-      style={{ transform: `rotate(${degrees}deg)` }}
-      viewBox="0 0 24 24"
-      width="18"
-    >
-      <path
-        d="M12 3v18M12 3l-5 6M12 3l5 6"
-        fill="none"
-        stroke="currentColor"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth="2"
-      />
-    </svg>
+    <Link href="/weather" className="card group block p-5 transition hover:-translate-y-0.5 hover:shadow-md">
+      <div className="flex items-end justify-between gap-3">
+        <p className="heading text-5xl leading-none text-brand-950">{r0(now.temp)}°</p>
+        <p className="heading text-right text-lg text-brand-800">
+          <span aria-hidden>{sky.icon}</span> {sky.text}
+        </p>
+      </div>
+      <p className="mt-4 text-slate-600">
+        {now.wind !== null && now.wind < 2
+          ? "Calm"
+          : `Wind ${r0(now.wind)} mph from the ${cardinal(now.dir)}, gusting ${r0(now.gust)}`}
+      </p>
+      <p className={`mt-3 inline-block rounded-full px-3 py-1 text-sm font-semibold ${verdict.className}`}>{verdict.label}</p>
+      {!closed && reasons.length > 0 && <p className="mt-2 text-sm text-slate-500">{reasons.join(" · ")}</p>}
+      <p className="heading mt-4 text-sm text-brand-700 group-hover:text-accent-600">Full forecast →</p>
+    </Link>
   );
 }

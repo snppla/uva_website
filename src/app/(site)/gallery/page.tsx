@@ -6,7 +6,10 @@ import { formatDay } from "@/lib/dates";
 import { imageUrl } from "@/lib/urls";
 import { Container, Empty, Loading, PageHeader } from "@/components/ui";
 
-export const metadata: Metadata = { title: "Gallery" };
+export const metadata: Metadata = {
+  title: "Gallery",
+  description: "Photos of RC planes, helicopters and club events at the Utah Valley Aeromodelers flying field in Saratoga Springs, Utah, going back to 2001.",
+};
 
 export default function GalleryPage() {
   return (

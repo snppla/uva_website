@@ -7,7 +7,10 @@ import { addDays, clubDate, formatTime, fromClubTime } from "@/lib/dates";
 import { EventItem } from "@/components/cards";
 import { Container, Empty, Loading, PageHeader } from "@/components/ui";
 
-export const metadata: Metadata = { title: "Events" };
+export const metadata: Metadata = {
+  title: "Events",
+  description: "Club meetings, fun flies, the Float Fly, Open House, Jet Jam and Freeze Fly at the Utah Valley Aeromodelers RC field in Saratoga Springs, Utah.",
+};
 
 export default function EventsPage({ searchParams }: PageProps<"/events">) {
   return (
