@@ -55,12 +55,20 @@ export function ActionForm({
   );
 }
 
-export function SubmitButton({ children, className = "btn-primary" }: { children: ReactNode; className?: string }) {
+export function SubmitButton({
+  children,
+  className = "btn-primary",
+  pendingLabel = "Saving…",
+}: {
+  children: ReactNode;
+  className?: string;
+  pendingLabel?: string;
+}) {
   const { pending: nativePending } = useFormStatus();
   const pending = useContext(PendingContext) || nativePending;
   return (
     <button type="submit" className={className} disabled={pending}>
-      {pending ? "Saving…" : children}
+      {pending ? pendingLabel : children}
     </button>
   );
 }

@@ -13,6 +13,7 @@ const items = [
   { href: "/admin/members", label: "Members" },
   { href: "/admin/membership", label: "Membership & PayPal" },
   { href: "/admin/pages", label: "Page content" },
+  { href: "/admin/email", label: "Email" },
   { href: "/admin/account", label: "Admins & password" },
 ];
 

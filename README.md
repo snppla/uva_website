@@ -139,6 +139,33 @@ photos (`data/seed-photos/`) and `data/seed-content.json` stay on your machine; 
 
 For the local dev database, `npm run db:seed` (`-- --reset`) does the same directly.
 
+### Email
+
+The site sends email through an SMTP provider rather than straight from the server. Mail sent
+directly from a home or VPS IP usually gets rejected or lands in spam: the IP needs reverse DNS
+that only the ISP can set, and residential ranges are on blocklists. Any provider works; the club
+uses [Purelymail](https://purelymail.com/) so mail comes from the club's own domain.
+
+1. **Set up the domain with the provider.** In Purelymail, add the domain and create a mailbox to
+   send from (e.g. `noreply@…`). Purelymail lists the DNS records to add in Cloudflare: MX, SPF
+   (`v=spf1 include:_spf.purelymail.com ~all`, which replaces any existing `v=spf1` record; a
+   domain may have only one), DKIM and DMARC. Wait until Purelymail shows them all as verified.
+2. **Add the settings to `.env`** and restart (`docker compose up -d`):
+   ```env
+   SMTP_HOST=smtp.purelymail.com
+   SMTP_PORT=465
+   SMTP_USER=noreply@example-club.org
+   SMTP_PASS=...
+   EMAIL_FROM="Utah Valley Aeromodelers <noreply@example-club.org>"
+   EMAIL_REPLY_TO=treasurer@example-club.org   # optional
+   ```
+   Port 465 uses TLS from the start; any other port uses STARTTLS (encryption is required either
+   way). Set `SMTP_SECURE=true` or `false` to override that guess.
+3. **Test it:** *Admin → Email* shows the settings (never the password), checks the login, and
+   sends a test email. Check the test arrives in the inbox, not spam.
+
+With these unset, email is simply switched off.
+
 ### Updating
 
 ```bash

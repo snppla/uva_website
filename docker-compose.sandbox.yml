@@ -35,6 +35,14 @@ services:
       SITE_URL: ${SITE_URL:-}
       # Enables the /api/seed import endpoints while set (see README). Leave empty normally.
       SEED_API_TOKEN: ${SEED_API_TOKEN:-}
+      # Outgoing email through an SMTP provider (see README "Email"). Leave empty to disable.
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-}
+      SMTP_SECURE: ${SMTP_SECURE:-}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+      EMAIL_FROM: ${EMAIL_FROM:-}
+      EMAIL_REPLY_TO: ${EMAIL_REPLY_TO:-}
     volumes:
       - uploads:/data/uploads
 
