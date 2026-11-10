@@ -2,7 +2,7 @@
 
 import { useState, type CSSProperties } from "react";
 import { FIELD, type Runway } from "@/lib/weather/field";
-import { norm, ok, r0, rwyNum, toMag, type RunwayComponents } from "@/lib/weather/calc";
+import { isCalm, norm, ok, r0, rwyNum, toMag, type RunwayComponents } from "@/lib/weather/calc";
 
 const C = 110; // center of the ring
 const rad = (a: number) => (a * Math.PI) / 180;
@@ -43,6 +43,8 @@ type Props = {
   /** Favored runway end, or null when there's no wind data. */
   comp: RunwayComponents | null;
   windSpeed: number | null;
+  /** Hide the wind arrow (the wind rounds to 0 mph, so it isn't blowing from anywhere). */
+  noWind?: boolean;
   /** Sun position now, degrees true / above the horizon. */
   sun: { az: number; el: number } | null;
 };
@@ -50,12 +52,15 @@ type Props = {
 /**
  * The field from above in the magnetic frame: satellite photo (or drawn runways if it fails to load),
  * wind arrow, LAND / TAKEOFF arrows on the favored runway, pits windsock, pilot stations and the sun.
+ * When calm, the main runway gets LAND / TAKEOFF arrows for both directions.
  */
-export function Compass({ dirTrue, comp, windSpeed, sun }: Props) {
+export function Compass({ dirTrue, comp, windSpeed, sun, noWind = false }: Props) {
   const P = FIELD.photo;
   const [photo, setPhoto] = useState(true);
-  const favRwy = comp?.rwy;
-  const dir = ok(dirTrue) ? toMag(dirTrue) : null;
+  const calm = ok(windSpeed) && isCalm(windSpeed);
+  // When calm there's no favored direction, so the main runway is shown, usable both ways
+  const favRwy = comp ? (calm ? mainRwy : comp.rwy) : undefined;
+  const dir = ok(dirTrue) && !noWind ? toMag(dirTrue) : null;
   const labelStyle: CSSProperties = photo ? { fill: "#fff", ...halo("rgba(20,26,38,.75)") } : { fill: COLORS.muted };
   const k = pxPerFt / P.pxPerFt; // compass px per photo px
 
@@ -64,7 +69,7 @@ export function Compass({ dirTrue, comp, windSpeed, sun }: Props) {
       className="h-auto w-full max-w-[460px] flex-none"
       viewBox="-42 -22 304 264"
       role="img"
-      aria-label={`Wind from ${r0(dir)} degrees magnetic. Runways ${FIELD.runways.map((r) => `${rwyNum(r.hdg)}/${rwyNum(r.hdg + 180)}`).join(" and ")}`}
+      aria-label={`${noWind ? "No wind" : `Wind from ${r0(dir)} degrees magnetic`}. Runways ${FIELD.runways.map((r) => `${rwyNum(r.hdg)}/${rwyNum(r.hdg + 180)}`).join(" and ")}`}
     >
       <circle cx={C} cy={C} r={100} fill="#f4f8fd" stroke={COLORS.line} strokeWidth={2} />
       {photo && (
@@ -149,7 +154,15 @@ export function Compass({ dirTrue, comp, windSpeed, sun }: Props) {
       )}
 
       {dir !== null && <WindArrow dir={dir} photo={photo} />}
-      {comp && !(ok(windSpeed) && windSpeed <= FIELD.calmMph) && <Flow comp={comp} photo={photo} />}
+      {comp && favRwy && (calm ? (
+        // Same side number in each heading's own frame puts the two pairs on opposite sides of the runway
+        <>
+          <Flow rwy={favRwy} h={favRwy.hdg} sides={[awayFromPits(favRwy.hdg)]} photo={photo} />
+          <Flow rwy={favRwy} h={favRwy.hdg + 180} sides={[awayFromPits(favRwy.hdg)]} photo={photo} />
+        </>
+      ) : (
+        <Flow rwy={favRwy} h={comp.h} sides={[awayFromPits(comp.h), -awayFromPits(comp.h)]} photo={photo} />
+      ))}
       <RunwayNumbers />
       <Windsock dir={dir} windSpeed={windSpeed} />
       {sun && sun.el > 0 && <Sun az={sun.az} el={sun.el} />}
@@ -258,10 +271,22 @@ function Sun({ az, el }: { az: number; el: number }) {
   );
 }
 
-/** Green LAND / TAKEOFF arrows beside the favored runway, pointing into the wind (comp.h). */
-function Flow({ comp, photo }: { comp: RunwayComponents; photo: boolean }) {
-  const r = comp.rwy, e = ext(r);
-  const intoFwd = norm(comp.h) === norm(r.hdg);
+/**
+ * Side of the runway for heading h's LAND / TAKEOFF arrows: +1 = right of the direction of travel.
+ * Prefers the side away from the pits.
+ */
+function awayFromPits(h: number) {
+  const rightNormal = norm(h + 90);
+  return Math.abs(((rightNormal - FIELD.pits.bearing + 540) % 360) - 180) < 90 ? -1 : 1;
+}
+
+/**
+ * Green LAND / TAKEOFF arrows beside runway `rwy`, for landing and taking off heading `h`.
+ * `sides` lists the sides the arrows may go on, in order of preference.
+ */
+function Flow({ rwy: r, h, sides, photo }: { rwy: Runway; h: number; sides: number[]; photo: boolean }) {
+  const e = ext(r);
+  const intoFwd = norm(h) === norm(r.hdg);
   const up = intoFwd ? e.fwd : e.back, down = intoFwd ? e.back : e.fwd;
   const halfW = stripWidth(r) / 2;
   // Landing arrow starts out on the approach and the takeoff arrow ends on the climb-out,
@@ -277,7 +302,7 @@ function Flow({ comp, photo }: { comp: RunwayComponents; photo: boolean }) {
       return [[...pt(rw.hdg, ee.fwd + 8), 12], [...pt(rw.hdg + 180, ee.back + 8), 12]];
     })
     .concat([[px + 2, py, 16], [px + 2, py + 12, 9], [...stationsCenter, 15]]);
-  const a = rad(comp.h);
+  const a = rad(h);
   const toScreen = (X: number, Y: number) => {
     const dx = X - C, dy = Y - C;
     return [C + dx * Math.cos(a) - dy * Math.sin(a), C + dx * Math.sin(a) + dy * Math.cos(a)];
@@ -306,12 +331,11 @@ function Flow({ comp, photo }: { comp: RunwayComponents; photo: boolean }) {
     }
     return best;
   };
-  // Prefer the side away from the pits; each arrow switches sides on its own if its label won't fit
-  const rightNormal = norm(comp.h + 90);
-  const prefSide = Math.abs(((rightNormal - FIELD.pits.bearing + 540) % 360) - 180) < 90 ? -1 : 1;
+  // Each arrow switches sides on its own if its label won't fit (when more than one side is allowed)
+  const prefSide = sides[0];
   const fit = (from: number, to: number, prefY: number, hl: number) => {
     let best: { x: number; lx: number; y: number; pen: number } | null = null;
-    for (const side of [prefSide, -prefSide]) {
+    for (const side of sides) {
       const x = C + side * (halfW + 7), lx = x + side * 9;
       const p = place(lx, from, to, prefY, hl);
       if (p && (!best || p.pen < best.pen)) best = { x, lx, y: p.y, pen: p.pen };
@@ -332,7 +356,7 @@ function Flow({ comp, photo }: { comp: RunwayComponents; photo: boolean }) {
     </>
   );
   // Labels run along the arrows, just outside them; flipped when they'd read upside down
-  const flip = norm(comp.h) > 180;
+  const flip = norm(h) > 180;
   const label = (p: { lx: number; y: number }, txt: string) => (
     <text
       x={p.lx} y={p.y} textAnchor="middle" dominantBaseline="middle"
@@ -343,7 +367,7 @@ function Flow({ comp, photo }: { comp: RunwayComponents; photo: boolean }) {
     </text>
   );
   return (
-    <g transform={`rotate(${comp.h} ${C} ${C})`}>
+    <g transform={`rotate(${h} ${C} ${C})`}>
       {arrow(LA.x, land[0], land[1], true)}
       {arrow(TA.x, tko[0], tko[1], false)}
       {label(LA, "LAND")}

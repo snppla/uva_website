@@ -4,7 +4,7 @@ import { Fragment, useState, type ReactNode } from "react";
 import { FIELD, PRESETS, limitsFor, type ToleranceSetting } from "@/lib/weather/field";
 import {
   aqiText, bestWindow, cardinal, clock, cloudBase, components, dayName, densityAltitude, firstWindow, hourLabel, hourLong, isGlare,
-  ok, r0, runwayChoice, rwyNum, sockText, toMag, windowText, wx,
+  isCalm, isNoWind, ok, r0, runwayChoice, rwyNum, sockText, toMag, windowText, wx,
   type Forecast, type Rated, type Reason, type Trend,
 } from "@/lib/weather/calc";
 import type { FieldNotice } from "@/lib/weather/notice";
@@ -215,25 +215,40 @@ export function Verdict({ now, hours, idx, todayStr, trend, aqi, closed, toleran
 export function WindCard({ now, sun, station }: { now: Rated; sun: { az: number; el: number }; station: StationState }) {
   const choice = ok(now.wind) && ok(now.dir) ? runwayChoice(now.wind, now.dir) : null;
   const comp = choice?.best ?? null;
-  const calm = !ok(now.wind) || now.wind <= FIELD.calmMph;
+  const calm = !ok(now.wind) || isCalm(now.wind);
+  // A forecast direction still comes with 0 mph; don't show one when nothing is blowing
+  const noWind = isNoWind(now.wind);
   const rwyLabel = FIELD.runways.map((r) => `${rwyNum(r.hdg)}/${rwyNum(r.hdg + 180)} ${r.name.toLowerCase()}`).join(" · ");
   return (
     <Card title="Wind & Runway" note={rwyLabel}>
       <div className="flex flex-wrap items-center justify-center gap-6">
-        <Compass dirTrue={now.dir} comp={comp} windSpeed={now.wind} sun={sun} />
+        <Compass dirTrue={now.dir} comp={comp} windSpeed={now.wind} sun={sun} noWind={noWind} />
         <div className="min-w-64 flex-1">
-          <div className="text-5xl leading-none font-extrabold text-brand-950">
-            {r0(now.wind)} <small className="text-base font-semibold text-slate-500">mph</small>
-          </div>
-          <div className="mt-1 text-slate-500">
-            from {cardinal(now.dir)} ({ok(now.dir) ? r0(toMag(now.dir)) : "–"}° mag) · gusts <strong className="text-brand-950">{r0(now.gust)} mph</strong>
-          </div>
+          {noWind ? (
+            <>
+              <div className="text-5xl leading-none font-extrabold text-brand-950">No wind</div>
+              {ok(now.gust) && Math.round(now.gust) > 0 && (
+                <div className="mt-1 text-slate-500">
+                  gusts <strong className="text-brand-950">{r0(now.gust)} mph</strong>
+                </div>
+              )}
+            </>
+          ) : (
+            <>
+              <div className="text-5xl leading-none font-extrabold text-brand-950">
+                {r0(now.wind)} <small className="text-base font-semibold text-slate-500">mph</small>
+              </div>
+              <div className="mt-1 text-slate-500">
+                from {cardinal(now.dir)} ({ok(now.dir) ? r0(toMag(now.dir)) : "–"}° mag) · gusts <strong className="text-brand-950">{r0(now.gust)} mph</strong>
+              </div>
+            </>
+          )}
           <dl className="mt-3 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1">
             <dt className="text-slate-500">Use runway</dt>
             <dd className="font-semibold">
               {calm || !comp ? (
                 <>
-                  Calm: either direction <Muted>(wind {FIELD.calmMph} mph or less)</Muted>
+                  Calm: either direction <Muted>(wind under {FIELD.calmMph} mph)</Muted>
                 </>
               ) : (
                 <>
@@ -499,7 +514,7 @@ export function Hourly({ now, hours, idx, todayStr, sun }: { now: Rated; hours: 
                   <span className="w-2.5 rounded-t-[3px] bg-brand-300" style={{ height: barH(h.gust) }} />
                 </div>
                 <div className="font-semibold">
-                  <DirArrow dir={h.dir} className={night ? "text-brand-300" : undefined} />
+                  <DirArrow dir={isNoWind(h.wind) ? null : h.dir} className={night ? "text-brand-300" : undefined} />
                   {r0(h.wind)}
                   <span className={`font-normal ${night ? "text-brand-300" : "text-slate-500"}`}>/{r0(h.gust)}</span>
                 </div>
@@ -533,11 +548,11 @@ function HourDetail({ h, isNow, todayStr, onClose }: { h: Rated; isNow: boolean;
   const { tone, label } = hourTone(h);
   const w = wx(h.code, h.isDay);
   const rc = ok(h.wind) && ok(h.dir) ? runwayChoice(h.wind, h.dir).best : null;
-  const calm = !ok(h.wind) || h.wind <= FIELD.calmMph;
+  const calm = !ok(h.wind) || isCalm(h.wind);
   const base = cloudBase(h.temp, h.dew);
   const dirText = (dir: number | null) => (ok(dir) ? `${cardinal(dir)} (${r0(toMag(dir))}° mag)` : "–");
   const rows: [string, ReactNode][] = [
-    ["Wind", <>{r0(h.wind)} mph from {dirText(h.dir)}</>],
+    ["Wind", isNoWind(h.wind) ? "No wind" : <>{r0(h.wind)} mph from {dirText(h.dir)}</>],
     ["Gusts", `${r0(h.gust)} mph`],
     [
       "Runway",
@@ -697,7 +712,7 @@ function DayDetail({ date, hours, idx, todayStr, sun }: { date: string; hours: R
         const { tone, label } = hourTone(h);
         const w = wx(h.code, h.isDay);
         const rc = ok(h.wind) && ok(h.dir) ? runwayChoice(h.wind, h.dir).best : null;
-        const calm = !ok(h.wind) || h.wind <= FIELD.calmMph;
+        const calm = !ok(h.wind) || isCalm(h.wind);
         return (
           <div key={h.t} className={`${row} mt-1 rounded-lg border-l-4 bg-white px-2 py-1.5 text-sm ${tone === "caution" ? "border-l-caution-bar" : TONE[tone].border}`}>
             <div className="font-bold text-brand-950">{hourLabel(h.hour)}</div>
@@ -705,7 +720,7 @@ function DayDetail({ date, hours, idx, todayStr, sun }: { date: string; hours: R
               <Pill tone={tone}>{label}</Pill>
             </div>
             <div className="max-md:col-start-3 max-md:text-right">
-              <DirArrow dir={h.dir} /> <strong>{r0(h.wind)}</strong>
+              <DirArrow dir={isNoWind(h.wind) ? null : h.dir} /> <strong>{r0(h.wind)}</strong>
               <Muted>/{r0(h.gust)}</Muted> mph
             </div>
             <div className="max-md:col-start-2">
