@@ -8,6 +8,10 @@ import { FIELD, type Runway, type Tolerance } from "./field";
 export const ok = (v: number | null | undefined): v is number => v !== null && v !== undefined && !Number.isNaN(v);
 /** Rounded number, or an en dash when there's no value. */
 export const r0 = (v: number | null | undefined) => (ok(v) ? String(Math.round(v)) : "–");
+/** Calm: the wind as displayed (rounded) is under FIELD.calmMph, so takeoff/landing direction doesn't matter. */
+export const isCalm = (mph: number) => Math.round(mph) < FIELD.calmMph;
+/** The wind rounds to 0 mph; a forecast still gives a direction, but nothing is blowing from it. */
+export const isNoWind = (mph: number | null | undefined) => ok(mph) && Math.round(mph) === 0;
 const CARD16 = ["N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE", "S", "SSW", "SW", "WSW", "W", "WNW", "NW", "NNW"];
 export const norm = (d: number) => ((d % 360) + 360) % 360;
 export const cardinal = (d: number | null | undefined) => (ok(d) ? CARD16[Math.round(norm(d) / 22.5) % 16] : "–");
@@ -406,9 +410,9 @@ export function windTrend(now: Hour, hours: Hour[], idx: number): Trend | null {
     t = { icon: "📉", title: "Wind easing:", detail: `${r0(nowWind)} → ${r0(low.wind)} mph by ${hourLong(low.hour)}` };
   else t = { icon: "➡️", title: "Wind speed steady", detail: `around ${r0(nowWind)} mph for the next ${FIELD.trendHours} hours` };
   // Runway change: first upcoming hour where a different runway end is favored (ignoring calm hours)
-  if (nowWind >= FIELD.calmMph && ok(now.dir)) {
+  if (!isCalm(nowWind) && ok(now.dir)) {
     const cur = runwayChoice(nowWind, now.dir).best.num;
-    const sw = next.find((h) => h.wind! >= FIELD.calmMph && ok(h.dir) && runwayChoice(h.wind!, h.dir).best.num !== cur);
+    const sw = next.find((h) => !isCalm(h.wind!) && ok(h.dir) && runwayChoice(h.wind!, h.dir).best.num !== cur);
     if (sw) t.shift = `wind shifts to ${cardinal(sw.dir)}: runway ${runwayChoice(sw.wind!, sw.dir!).best.num} likely by ${hourLong(sw.hour)}`;
   }
   return t;

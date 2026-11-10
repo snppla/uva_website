@@ -31,7 +31,7 @@ export const FIELD = {
   pits: { bearing: 90 - 10.5, distFt: 160 },
   // Only recommend the shorter cross runway when it cuts the crosswind by at least this much (mph)
   crossRunwayMargin: 3,
-  calmMph: 3, // below this, takeoff/landing direction doesn't matter
+  calmMph: 3, // wind (rounded to whole mph) below this: takeoff/landing direction doesn't matter
   elevFt: 4498, // field elevation (club figure); used for density altitude
   lowCloudFt: 700, // a cloud base below this (ft AGL) can hide a model in a normal pattern
   // Four pilot stations behind a white fence on the NE edge of the main runway, just NW of the

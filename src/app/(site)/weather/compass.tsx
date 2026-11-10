@@ -2,7 +2,7 @@
 
 import { useState, type CSSProperties } from "react";
 import { FIELD, type Runway } from "@/lib/weather/field";
-import { norm, ok, r0, rwyNum, toMag, type RunwayComponents } from "@/lib/weather/calc";
+import { isCalm, norm, ok, r0, rwyNum, toMag, type RunwayComponents } from "@/lib/weather/calc";
 
 const C = 110; // center of the ring
 const rad = (a: number) => (a * Math.PI) / 180;
@@ -57,7 +57,7 @@ type Props = {
 export function Compass({ dirTrue, comp, windSpeed, sun, noWind = false }: Props) {
   const P = FIELD.photo;
   const [photo, setPhoto] = useState(true);
-  const calm = ok(windSpeed) && windSpeed < FIELD.calmMph;
+  const calm = ok(windSpeed) && isCalm(windSpeed);
   // When calm there's no favored direction, so the main runway is shown, usable both ways
   const favRwy = comp ? (calm ? mainRwy : comp.rwy) : undefined;
   const dir = ok(dirTrue) && !noWind ? toMag(dirTrue) : null;
@@ -69,7 +69,7 @@ export function Compass({ dirTrue, comp, windSpeed, sun, noWind = false }: Props
       className="h-auto w-full max-w-[460px] flex-none"
       viewBox="-42 -22 304 264"
       role="img"
-      aria-label={`${dir === null ? "No wind" : `Wind from ${r0(dir)} degrees magnetic`}. Runways ${FIELD.runways.map((r) => `${rwyNum(r.hdg)}/${rwyNum(r.hdg + 180)}`).join(" and ")}`}
+      aria-label={`${noWind ? "No wind" : `Wind from ${r0(dir)} degrees magnetic`}. Runways ${FIELD.runways.map((r) => `${rwyNum(r.hdg)}/${rwyNum(r.hdg + 180)}`).join(" and ")}`}
     >
       <circle cx={C} cy={C} r={100} fill="#f4f8fd" stroke={COLORS.line} strokeWidth={2} />
       {photo && (
