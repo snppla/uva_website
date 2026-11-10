@@ -45,6 +45,9 @@ services:
       EMAIL_FROM: ${EMAIL_FROM:-}
       EMAIL_REPLY_TO: ${EMAIL_REPLY_TO:-}
       EMAIL_REDIRECT_TO: ${EMAIL_REDIRECT_TO:-}
+      # Cloudflare Turnstile on the login and forgot-password forms (see README). Empty = off.
+      TURNSTILE_SITE_KEY: ${TURNSTILE_SITE_KEY:-}
+      TURNSTILE_SECRET_KEY: ${TURNSTILE_SECRET_KEY:-}
     volumes:
       - uploads:/data/uploads
 

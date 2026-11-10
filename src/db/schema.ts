@@ -16,6 +16,20 @@ export const admins = pgTable("admins", {
   email: text("email").notNull().unique(),
   name: text("name").notNull(),
   passwordHash: text("password_hash").notNull(),
+  // Stored in each login session; bumping it signs out every existing session.
+  sessionVersion: integer("session_version").notNull().default(0),
+  createdAt: createdAt(),
+});
+
+// One-time "forgot password" links. Only a hash of the token is stored.
+export const passwordResets = pgTable("password_resets", {
+  id: serial("id").primaryKey(),
+  tokenHash: text("token_hash").notNull().unique(),
+  adminId: integer("admin_id")
+    .notNull()
+    .references(() => admins.id, { onDelete: "cascade" }),
+  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+  usedAt: timestamp("used_at", { withTimezone: true }),
   createdAt: createdAt(),
 });
 

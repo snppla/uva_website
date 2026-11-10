@@ -112,7 +112,27 @@ There are no default or temporary passwords. Every admin chooses their own throu
   docker compose restart app && docker compose logs app | grep -A2 "No admin accounts"
   ```
 
+- **Forgot password:** with [email](#email) set up, the login page has a *Forgot password?* link.
+  It emails a reset link that works once and expires in an hour (at most 3 emails per admin per
+  hour). Resetting or changing a password signs that admin out on every other device.
+
 Only a hash of each link's token is stored, so links can't be recovered from the database or backups.
+
+### Turnstile
+
+[Cloudflare Turnstile](https://developers.cloudflare.com/turnstile/) (a "verify you're human" check,
+usually invisible) protects the login and forgot-password forms from bots. On top of that, an
+email address is locked out for 15 minutes after 8 wrong passwords.
+
+In the Cloudflare dashboard go to *Turnstile → Add widget*, add your domain (and the sandbox's),
+choose **Managed**, then put the two keys in `.env` and restart:
+
+```env
+TURNSTILE_SITE_KEY=0x...
+TURNSTILE_SECRET_KEY=0x...
+```
+
+With them unset the forms work without the check (fine for development).
 
 ### Seeding a deployed site
 

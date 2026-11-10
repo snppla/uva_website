@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { and, eq, isNull } from "drizzle-orm";
 import { db, adminInvites, admins } from "@/db";
-import { checkPassword, requireAdmin } from "@/lib/auth";
+import { checkPassword, createSession, endAllSessions, requireAdmin } from "@/lib/auth";
 import { errorMessage, int, str, type FormState } from "@/lib/admin";
 import { emailConfigured, sendEmail } from "@/lib/email";
 import { INVITE_DAYS, MIN_PASSWORD, createInvite, invitePath } from "@/lib/invites";
@@ -18,7 +18,10 @@ export async function changePassword(_prev: FormState, fd: FormData): Promise<Fo
   if (next.length < MIN_PASSWORD) return { error: `New password must be at least ${MIN_PASSWORD} characters.` };
   if (next !== str(fd, "confirmPassword")) return { error: "New passwords don't match." };
   await db.update(admins).set({ passwordHash: await hashPassword(next) }).where(eq(admins.id, admin.id));
-  return { message: "Password changed." };
+  // Sign out everywhere else, then give this browser a fresh session.
+  await endAllSessions(admin.id);
+  await createSession(admin.id);
+  return { message: "Password changed. You've been signed out on your other devices." };
 }
 
 export async function updateProfile(_prev: FormState, fd: FormData): Promise<FormState> {

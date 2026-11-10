@@ -1,0 +1,76 @@
+import "server-only";
+import { createHash, randomBytes } from "node:crypto";
+import { and, count, eq, gt, isNull, sql } from "drizzle-orm";
+import { db, admins, passwordResets } from "@/db";
+import { hashPassword } from "./password";
+
+export const RESET_MINUTES = 60;
+/** Most reset emails one admin can be sent per hour, however many people ask. */
+const MAX_PER_HOUR = 3;
+
+const hashToken = (token: string) => createHash("sha256").update(token).digest("hex");
+
+export const resetPath = (token: string) => `/admin/reset/${token}`;
+
+/**
+ * Create a reset link token for the admin with this email. Returns null (and does
+ * nothing) when there's no such admin or they've had too many links this hour.
+ */
+export async function createPasswordReset(email: string) {
+  const [admin] = await db
+    .select({ id: admins.id, name: admins.name, email: admins.email })
+    .from(admins)
+    .where(eq(admins.email, email.trim().toLowerCase()));
+  if (!admin) return null;
+
+  const hourAgo = new Date(Date.now() - 3_600_000);
+  const [{ n }] = await db
+    .select({ n: count() })
+    .from(passwordResets)
+    .where(and(eq(passwordResets.adminId, admin.id), gt(passwordResets.createdAt, hourAgo)));
+  if (n >= MAX_PER_HOUR) return null;
+
+  const token = randomBytes(32).toString("base64url");
+  await db.insert(passwordResets).values({
+    tokenHash: hashToken(token),
+    adminId: admin.id,
+    expiresAt: new Date(Date.now() + RESET_MINUTES * 60_000),
+  });
+  return { token, admin };
+}
+
+const valid = (token: string) =>
+  and(
+    eq(passwordResets.tokenHash, hashToken(token)),
+    isNull(passwordResets.usedAt),
+    gt(passwordResets.expiresAt, new Date()),
+  );
+
+/** The admin a reset token belongs to, if it's unused and unexpired. */
+export async function findPasswordReset(token: string) {
+  const [row] = await db
+    .select({ adminId: admins.id, email: admins.email })
+    .from(passwordResets)
+    .innerJoin(admins, eq(admins.id, passwordResets.adminId))
+    .where(valid(token));
+  return row ?? null;
+}
+
+/**
+ * Use up the token, set the new password and sign out every existing session,
+ * atomically. Also cancels the admin's other outstanding reset links.
+ */
+export async function resetPassword(token: string, password: string) {
+  const passwordHash = await hashPassword(password);
+  return db.transaction(async (tx) => {
+    const [reset] = await tx.update(passwordResets).set({ usedAt: new Date() }).where(valid(token)).returning();
+    if (!reset) return null;
+    await tx.delete(passwordResets).where(and(eq(passwordResets.adminId, reset.adminId), isNull(passwordResets.usedAt)));
+    const [admin] = await tx
+      .update(admins)
+      .set({ passwordHash, sessionVersion: sql`${admins.sessionVersion} + 1` })
+      .where(eq(admins.id, reset.adminId))
+      .returning({ id: admins.id, email: admins.email });
+    return admin ?? null;
+  });
+}
