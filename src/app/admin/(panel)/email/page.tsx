@@ -12,6 +12,12 @@ export default async function EmailAdmin() {
   return (
     <>
       <AdminTitle title="Email" />
+      {cfg?.redirectTo && (
+        <p className="mb-6 max-w-5xl rounded-md border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          <strong>Test mode is on.</strong> Every email the site sends goes to <strong>{cfg.redirectTo}</strong> instead
+          of its real recipients. Remove <code>EMAIL_REDIRECT_TO</code> from the server settings to send for real.
+        </p>
+      )}
       <div className="grid max-w-5xl gap-6 lg:grid-cols-2">
         <section className="card p-5">
           <h2 className="mb-3 font-semibold text-slate-900">Sending settings</h2>
@@ -27,6 +33,8 @@ export default async function EmailAdmin() {
               <dd className="break-all text-slate-900">{cfg.from}</dd>
               <dt className="text-slate-500">Replies go to</dt>
               <dd className="break-all text-slate-900">{cfg.replyTo || cfg.from}</dd>
+              <dt className="text-slate-500">Test mode</dt>
+              <dd className="break-all text-slate-900">{cfg.redirectTo ? `On: all mail goes to ${cfg.redirectTo}` : "Off"}</dd>
             </dl>
           ) : (
             <p className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800">

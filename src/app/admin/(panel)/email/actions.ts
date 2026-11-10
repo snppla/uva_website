@@ -20,12 +20,13 @@ export async function sendTestEmail(_prev: FormState, fd: FormData): Promise<For
   const to = str(fd, "to");
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(to)) return { error: "Enter a valid email address." };
   try {
-    await sendEmail({
+    const { redirectedTo } = await sendEmail({
       to,
       subject: `Test email from the ${site.shortName} website`,
       text: `This is a test email sent by ${admin.name} from the ${site.name} admin panel.\n\nIf you're reading this, email sending works.`,
     });
-    return { message: `Sent to ${to}. Check the inbox (and the spam folder).` };
+    const sentTo = redirectedTo ? `${redirectedTo} (test mode, instead of ${to})` : to;
+    return { message: `Sent to ${sentTo}. Check the inbox (and the spam folder).` };
   } catch (e) {
     return { error: `Sending failed: ${errorMessage(e)}` };
   }

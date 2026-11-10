@@ -166,6 +166,11 @@ uses [Purelymail](https://purelymail.com/) so mail comes from the club's own dom
 
 With these unset, email is simply switched off.
 
+**Test mode:** set `EMAIL_REDIRECT_TO=you@example.com` and every email the site sends goes to that
+address instead, with the intended recipients shown in the subject and at the top of the message.
+Use it in development and on the sandbox (which has a copy of the real member list) so tests never
+reach members. *Admin → Email* shows a banner while it's on.
+
 ### Updating
 
 ```bash

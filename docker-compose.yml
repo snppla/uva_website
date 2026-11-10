@@ -44,6 +44,7 @@ services:
       SMTP_PASS: ${SMTP_PASS:-}
       EMAIL_FROM: ${EMAIL_FROM:-}
       EMAIL_REPLY_TO: ${EMAIL_REPLY_TO:-}
+      EMAIL_REDIRECT_TO: ${EMAIL_REDIRECT_TO:-}
     volumes:
       - uploads:/data/uploads
 

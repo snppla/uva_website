@@ -13,6 +13,8 @@ export type EmailConfig = {
   pass: string;
   from: string;
   replyTo: string;
+  /** When set, every email goes here instead of to its real recipients (for testing). */
+  redirectTo: string;
 };
 
 const REQUIRED = ["SMTP_HOST", "SMTP_USER", "SMTP_PASS", "EMAIL_FROM"] as const;
@@ -37,6 +39,7 @@ export function emailConfig(): EmailConfig | null {
     pass: env("SMTP_PASS"),
     from: env("EMAIL_FROM"),
     replyTo: env("EMAIL_REPLY_TO"),
+    redirectTo: env("EMAIL_REDIRECT_TO"),
   };
 }
 
@@ -78,9 +81,27 @@ export type EmailMessage = {
   replyTo?: string;
 };
 
+const escapeHtml = (s: string) =>
+  s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+
+/** With EMAIL_REDIRECT_TO set, send to that address and note who it was meant for. */
+function redirected(msg: EmailMessage, redirectTo: string): EmailMessage {
+  if (!redirectTo) return msg;
+  const original = [msg.to].flat().join(", ");
+  const note = `[Test mode: this email would have gone to ${original}]`;
+  return {
+    ...msg,
+    to: redirectTo,
+    subject: `[TEST to ${original}] ${msg.subject}`,
+    text: `${note}\n\n${msg.text}`,
+    html: msg.html && `<p style="padding:8px;background:#fef3c7;border:1px solid #f59e0b">${escapeHtml(note)}</p>${msg.html}`,
+  };
+}
+
 /** Send one email. Throws if email isn't configured or the server refuses it. */
-export async function sendEmail(msg: EmailMessage) {
+export async function sendEmail(message: EmailMessage) {
   const cfg = requireConfig();
+  const msg = redirected(message, cfg.redirectTo);
   const info = await transporter(cfg).sendMail({
     from: cfg.from,
     replyTo: msg.replyTo || cfg.replyTo || undefined,
@@ -89,7 +110,7 @@ export async function sendEmail(msg: EmailMessage) {
     text: msg.text,
     html: msg.html,
   });
-  return { messageId: info.messageId };
+  return { messageId: info.messageId, redirectedTo: cfg.redirectTo || undefined };
 }
 
 /** Connect and log in to the SMTP server without sending anything. */
