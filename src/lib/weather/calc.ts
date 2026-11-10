@@ -173,6 +173,34 @@ export function buildHours(d: Forecast): Hour[] {
   });
 }
 
+/**
+ * The forecast's hours, the index of the current one, and "now": that hour with the forecast's
+ * current readings and the sun's position at `at` (UTC ms) laid over it.
+ */
+export function currentHour(d: Forecast, at = Date.now()) {
+  const hours = buildHours(d);
+  const c = d.current;
+  const key = c.time.slice(0, 13);
+  const idx = Math.max(0, hours.findIndex((h) => h.t.startsWith(key)));
+  const sun = sunPos(at);
+  const now: Hour = {
+    ...hours[idx],
+    temp: c.temperature_2m,
+    dew: c.dew_point_2m,
+    wind: c.wind_speed_10m,
+    dir: c.wind_direction_10m,
+    gust: c.wind_gusts_10m,
+    code: c.weather_code,
+    isDay: c.is_day,
+    precip: c.precipitation,
+    cloud: c.cloud_cover,
+    msl: c.pressure_msl,
+    sunAz: sun.az,
+    sunEl: sun.el,
+  };
+  return { hours, idx, sun, now };
+}
+
 /* ---------- Runways and wind ---------- */
 
 // Wind direction from the forecast is TRUE; runway headings are MAGNETIC.

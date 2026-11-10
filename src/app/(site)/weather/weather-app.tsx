@@ -2,8 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
-  assess, buildHours, clock, dayName, forecastUrl, airQualityUrl, ok, sunPos, windTrend,
-  type Forecast, type Hour, type Rated,
+  assess, clock, currentHour, dayName, forecastUrl, airQualityUrl, ok, windTrend,
+  type Forecast, type Rated,
 } from "@/lib/weather/calc";
 import { FIELD, limitsFor } from "@/lib/weather/field";
 import type { FieldNotice } from "@/lib/weather/notice";
@@ -23,7 +23,7 @@ async function getJSON<T>(url: string, opts?: RequestInit): Promise<T> {
 const within = <T, F>(p: Promise<T>, ms: number, fallback: F) =>
   Promise.race([p, new Promise<F>((r) => setTimeout(() => r(fallback), ms))]);
 
-type Loaded = { d: Forecast; hours: Hour[]; idx: number; at: number };
+type Loaded = { d: Forecast; at: number };
 
 export function WeatherApp() {
   const tolerance = useTolerance();
@@ -65,10 +65,7 @@ export function WeatherApp() {
     await within(Promise.all([fieldNotice, air]), 3000, null);
     try {
       const d = await fc;
-      const hours = buildHours(d);
-      const key = d.current.time.slice(0, 13);
-      const idx = Math.max(0, hours.findIndex((h) => h.t.startsWith(key)));
-      setForecast({ d, hours, idx, at: Date.now() });
+      setForecast({ d, at: Date.now() });
       setError(null);
       // With no signal the installed app shows the last saved forecast: say so instead of "Updated <now>"
       const fieldNow = new Date().toLocaleString("sv-SE", { timeZone: FIELD.tz }).replace(" ", "T").slice(0, 16);
@@ -104,24 +101,9 @@ export function WeatherApp() {
   // Everything rated for the pilot's aircraft
   const view = useMemo(() => {
     if (!forecast) return null;
-    const { d, hours, idx, at } = forecast;
+    const { d, at } = forecast;
     const c = d.current;
-    const sun = sunPos(at);
-    const nowHour: Hour = {
-      ...hours[idx],
-      temp: c.temperature_2m,
-      dew: c.dew_point_2m,
-      wind: c.wind_speed_10m,
-      dir: c.wind_direction_10m,
-      gust: c.wind_gusts_10m,
-      code: c.weather_code,
-      isDay: c.is_day,
-      precip: c.precipitation,
-      cloud: c.cloud_cover,
-      msl: c.pressure_msl,
-      sunAz: sun.az,
-      sunEl: sun.el,
-    };
+    const { hours, idx, sun, now: nowHour } = currentHour(d, at);
     const rated: Rated[] = hours.map((h) => ({ ...h, a: assess(h, limits) }));
     const a = assess(nowHour, limits);
     // Unhealthy air (wildfire smoke, winter inversion) right now makes it a caution day

@@ -6,6 +6,7 @@ import { Markdown } from "@/lib/markdown";
 import { imageUrl } from "@/lib/urls";
 import { ClubJsonLd } from "@/components/club-json-ld";
 import { EventItem, PostCard } from "@/components/cards";
+import { FieldWeather } from "@/components/field-weather";
 import { Mountains, PlaneIcon } from "@/components/brand";
 import { Empty, Loading, SectionTitle } from "@/components/ui";
 
@@ -43,12 +44,20 @@ export default function HomePage() {
               <LatestPosts />
             </Suspense>
           </section>
-          <section>
-            <SectionTitle title="Coming up" action={<ViewAll href="/events" />} />
-            <Suspense fallback={<Loading />}>
-              <UpcomingEvents />
-            </Suspense>
-          </section>
+          <div className="space-y-12">
+            <section>
+              <SectionTitle title="At the field" />
+              <Suspense fallback={<Loading label="Checking the weather…" />}>
+                <FieldWeather />
+              </Suspense>
+            </section>
+            <section>
+              <SectionTitle title="Coming up" action={<ViewAll href="/events" />} />
+              <Suspense fallback={<Loading />}>
+                <UpcomingEvents />
+              </Suspense>
+            </section>
+          </div>
         </div>
 
         <section>
