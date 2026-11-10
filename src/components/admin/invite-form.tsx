@@ -4,17 +4,32 @@ import { useActionState, useState } from "react";
 import { inviteAdmin } from "@/app/admin/(panel)/account/actions";
 import { Field } from "./fields";
 
-/** Creates an invite and shows the one-time link to copy and send. */
-export function InviteForm() {
+/** Creates an invite, emails it when email is set up, and shows the one-time link as a backup. */
+export function InviteForm({ canEmail }: { canEmail: boolean }) {
   const [state, action, pending] = useActionState(inviteAdmin, undefined);
   const [copied, setCopied] = useState(false);
 
   if (state?.link) {
     return (
       <div className="space-y-3 text-sm">
-        <p className="rounded-md border border-green-200 bg-green-50 px-3 py-2 text-green-800">
-          Invite created for <strong>{state.email}</strong>. Send them this link. It works once and expires in 7 days.
-        </p>
+        {state.emailed ? (
+          <p className="rounded-md border border-green-200 bg-green-50 px-3 py-2 text-green-800">
+            Invite emailed to <strong>{state.email}</strong>. The link works once and expires in 7 days. If it
+            doesn&apos;t arrive, you can send them the link below yourself.
+          </p>
+        ) : (
+          <>
+            {state.emailError && (
+              <p className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-red-700" role="alert">
+                Couldn&apos;t email the invite: {state.emailError}
+              </p>
+            )}
+            <p className="rounded-md border border-green-200 bg-green-50 px-3 py-2 text-green-800">
+              Invite created for <strong>{state.email}</strong>. Send them this link. It works once and expires in 7
+              days.
+            </p>
+          </>
+        )}
         <input readOnly value={state.link} className="input font-mono text-xs" onFocus={(e) => e.target.select()} />
         <div className="flex gap-2">
           <button
@@ -46,7 +61,7 @@ export function InviteForm() {
       <Field label="Name" name="name" required />
       <Field label="Email (their login)" name="email" type="email" required />
       <button className="btn-primary" disabled={pending}>
-        {pending ? "Creating…" : "Create invite link"}
+        {pending ? (canEmail ? "Sending…" : "Creating…") : canEmail ? "Email invite" : "Create invite link"}
       </button>
     </form>
   );

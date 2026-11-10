@@ -5,8 +5,10 @@ import { headers } from "next/headers";
 import { and, eq, isNull } from "drizzle-orm";
 import { db, adminInvites, admins } from "@/db";
 import { checkPassword, requireAdmin } from "@/lib/auth";
-import { int, str, type FormState } from "@/lib/admin";
-import { MIN_PASSWORD, createInvite, invitePath } from "@/lib/invites";
+import { errorMessage, int, str, type FormState } from "@/lib/admin";
+import { emailConfigured, sendEmail } from "@/lib/email";
+import { INVITE_DAYS, MIN_PASSWORD, createInvite, invitePath } from "@/lib/invites";
+import { site } from "@/site.config";
 import { hashPassword } from "@/lib/password";
 
 export async function changePassword(_prev: FormState, fd: FormData): Promise<FormState> {
@@ -28,7 +30,9 @@ export async function updateProfile(_prev: FormState, fd: FormData): Promise<For
   return { message: "Saved." };
 }
 
-export type InviteState = { error?: string; link?: string; email?: string } | undefined;
+export type InviteState =
+  | { error?: string; link?: string; email?: string; emailed?: boolean; emailError?: string }
+  | undefined;
 
 export async function inviteAdmin(_prev: InviteState, fd: FormData): Promise<InviteState> {
   const me = await requireAdmin();
@@ -45,8 +49,25 @@ export async function inviteAdmin(_prev: InviteState, fd: FormData): Promise<Inv
   const h = await headers();
   const host = h.get("x-forwarded-host") ?? h.get("host");
   const proto = h.get("x-forwarded-proto") ?? "https";
+  const link = `${proto}://${host}${invitePath(token)}`;
   revalidatePath("/admin/account");
-  return { link: `${proto}://${host}${invitePath(token)}`, email };
+
+  if (!emailConfigured()) return { link, email };
+  try {
+    await sendEmail({
+      to: email,
+      replyTo: me.email,
+      subject: `You're invited to be a ${site.shortName} website admin`,
+      text:
+        `Hi ${name},\n\n` +
+        `${me.name} invited you to help manage the ${site.name} website.\n\n` +
+        `Open this link to choose your password and sign in:\n${link}\n\n` +
+        `The link works once and expires in ${INVITE_DAYS} days. If you weren't expecting this, you can ignore it.`,
+    });
+    return { link, email, emailed: true };
+  } catch (e) {
+    return { link, email, emailError: errorMessage(e) };
+  }
 }
 
 export async function revokeInvite(fd: FormData) {

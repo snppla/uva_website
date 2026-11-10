@@ -2,6 +2,7 @@ import { and, asc, gt, isNull, ne } from "drizzle-orm";
 import { db, adminInvites, admins } from "@/db";
 import { requireAdmin } from "@/lib/auth";
 import { formatShortDate } from "@/lib/dates";
+import { emailConfigured } from "@/lib/email";
 import { AdminTitle, Field } from "@/components/admin/fields";
 import { ActionForm, ConfirmButton, SubmitButton } from "@/components/admin/forms";
 import { InviteForm } from "@/components/admin/invite-form";
@@ -63,8 +64,12 @@ export default async function AccountAdmin() {
 
         <section className="card p-5">
           <h2 className="mb-1 font-semibold text-slate-900">Invite an admin</h2>
-          <p className="mb-3 text-sm text-slate-500">They&apos;ll get a link to choose their own password.</p>
-          <InviteForm />
+          <p className="mb-3 text-sm text-slate-500">
+            {emailConfigured()
+              ? "They'll get an email with a link to choose their own password."
+              : "They'll get a link to choose their own password."}
+          </p>
+          <InviteForm canEmail={emailConfigured()} />
           {pending.length > 0 && (
             <div className="mt-5 border-t border-slate-100 pt-4">
               <h3 className="mb-2 text-sm font-semibold text-slate-700">Pending invites</h3>

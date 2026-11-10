@@ -104,7 +104,7 @@ There are no default or temporary passwords. Every admin chooses their own throu
 - **First admin:** while no admin accounts exist, each startup prints a setup link to the logs
   (valid 24 hours). Restart the app to get a fresh one.
 - **More officers:** *Admin → Admins & password → Invite an admin*. Enter their name and email,
-  then send them the link it gives you. It works once, expires in 7 days, and can be revoked.
+  and the site emails them the link (if [email](#email) is set up; otherwise send them the link it gives you). It works once, expires in 7 days, and can be revoked.
 - **Locked out entirely** (every admin forgot their password): delete the admin logins and
   restart; a new setup link appears in the logs. Content and members are not affected.
   ```bash
