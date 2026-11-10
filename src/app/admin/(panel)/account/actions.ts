@@ -10,6 +10,7 @@ import { emailConfigured, sendEmail } from "@/lib/email";
 import { INVITE_DAYS, MIN_PASSWORD, createInvite, invitePath } from "@/lib/invites";
 import { site } from "@/site.config";
 import { hashPassword } from "@/lib/password";
+import { alertPasswordChanged } from "@/lib/password-reset";
 
 export async function changePassword(_prev: FormState, fd: FormData): Promise<FormState> {
   const admin = await requireAdmin();
@@ -21,6 +22,7 @@ export async function changePassword(_prev: FormState, fd: FormData): Promise<Fo
   // Sign out everywhere else, then give this browser a fresh session.
   await endAllSessions(admin.id);
   await createSession(admin.id);
+  alertPasswordChanged(admin, "changed");
   return { message: "Password changed. You've been signed out on your other devices." };
 }
 

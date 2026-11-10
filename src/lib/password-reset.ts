@@ -1,8 +1,13 @@
 import "server-only";
 import { createHash, randomBytes } from "node:crypto";
 import { and, count, eq, gt, isNull, sql } from "drizzle-orm";
+import { after } from "next/server";
 import { db, admins, passwordResets } from "@/db";
+import { site } from "@/site.config";
+import { formatLongDate, formatTime } from "./dates";
+import { emailConfigured, sendEmail } from "./email";
 import { hashPassword } from "./password";
+import { siteUrl } from "./urls";
 
 export const RESET_MINUTES = 60;
 /** Most reset emails one admin can be sent per hour, however many people ask. */
@@ -70,7 +75,34 @@ export async function resetPassword(token: string, password: string) {
       .update(admins)
       .set({ passwordHash, sessionVersion: sql`${admins.sessionVersion} + 1` })
       .where(eq(admins.id, reset.adminId))
-      .returning({ id: admins.id, email: admins.email });
+      .returning({ id: admins.id, name: admins.name, email: admins.email });
     return admin ?? null;
+  });
+}
+
+/**
+ * Email the admin that their password just changed, so they find out if it wasn't them.
+ * Sent after the response; does nothing when email isn't set up.
+ */
+export function alertPasswordChanged(admin: { name: string; email: string }, how: "changed" | "reset") {
+  if (!emailConfigured()) return;
+  const now = new Date();
+  after(async () => {
+    try {
+      await sendEmail({
+        to: admin.email,
+        subject: `Your ${site.shortName} website password was changed`,
+        text:
+          `Hi ${admin.name},\n\n` +
+          `The password for your ${site.name} website admin account (${admin.email}) was ` +
+          `${how === "reset" ? "reset using a forgot-password link" : "changed"} on ` +
+          `${formatLongDate(now)} at ${formatTime(now)}. You've been signed out on your other devices.\n\n` +
+          `If that was you, there's nothing else to do.\n\n` +
+          `If it wasn't, reset your password right away at ${siteUrl()}/admin/forgot ` +
+          `and let another club officer know.`,
+      });
+    } catch (e) {
+      console.error("Password change alert email failed:", e);
+    }
   });
 }

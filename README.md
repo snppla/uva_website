@@ -114,7 +114,8 @@ There are no default or temporary passwords. Every admin chooses their own throu
 
 - **Forgot password:** with [email](#email) set up, the login page has a *Forgot password?* link.
   It emails a reset link that works once and expires in an hour (at most 3 emails per admin per
-  hour). Resetting or changing a password signs that admin out on every other device.
+  hour). Resetting or changing a password signs that admin out on every other device and emails
+  them an alert, so they find out if it wasn't them.
 
 Only a hash of each link's token is stored, so links can't be recovered from the database or backups.
 
